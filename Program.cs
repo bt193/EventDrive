@@ -17,7 +17,7 @@ namespace InvokeC
 {
     public class Program
     {
-#if true        
+#if false        
         public static void Main(string[] args)
         {
             EventStore.Instance();
@@ -32,47 +32,47 @@ namespace InvokeC
         static void Main(string[] args)
         {
             var eventStore = EventStore.Instance();
-            // var watch = new Stopwatch();
-            // watch.Start();
+            var watch = new Stopwatch();
+            watch.Start();
 
-            // Task.Run(async () => Listen());
+            Task.Run(async () => Listen());
 
-            // var evt = new Event
-            // {
-            //     EventId = Guid.NewGuid(),
-            //     StreamId = "player/adam",
-            //     EventType = "PlayerCreated",
-            //     Version = 0,
-            //     Metadata = Encoding.UTF8.GetBytes("{}"),
-            //     Payload = Encoding.UTF8.GetBytes("{}"),
-            // };
+            var evt = new Event
+            {
+                EventId = Guid.NewGuid(),
+                StreamId = "player/adam",
+                EventType = "PlayerCreated",
+                Version = 0,
+                Metadata = Encoding.UTF8.GetBytes("{}"),
+                Payload = Encoding.UTF8.GetBytes("{}"),
+            };
 
-            // for (var i = 0; i < 25_000; ++i) //100M -> 2.4GiB
-            // {
-            //     evt.EventId = Guid.NewGuid();
-            //     eventStore.Append(evt);
-            // }
+            for (var i = 0; i < 25_000; ++i) //100M -> 2.4GiB
+            {
+                evt.EventId = Guid.NewGuid();
+                eventStore.Append(evt);
+            }
 
-            // var watch2 = new Stopwatch();
-            // var interations = 0;
-            // var position = Guid.Empty.ToByteArray();
-            // var chunk = new EventChunk(new byte[0], 0, false);
-            // var events = 0;
+            var watch2 = new Stopwatch();
+            var interations = 0;
+            var position = Guid.Empty.ToByteArray();
+            var chunk = new EventChunk(new byte[0], 0, false);
+            var events = 0;
 
-            // watch2.Start();
+            watch2.Start();
 
-            // while (!chunk.Empty)
-            // {
-            //     chunk = eventStore.GetFrom(position);
-            //     events += chunk.Parse().ToList().Count;
-            //     ++interations;
-            // }
+            while (!chunk.Empty)
+            {
+                chunk = eventStore.GetFrom(position);
+                events += chunk.Parse().ToList().Count;
+                ++interations;
+            }
 
-            // watch2.Stop();
-            // Console.WriteLine($"GetFrom: {watch2.ElapsedMilliseconds}, interations: {interations}, events: {events}, eps: {1000 * events / (1 + watch2.ElapsedMilliseconds)}");
+            watch2.Stop();
+            Console.WriteLine($"GetFrom: {watch2.ElapsedMilliseconds}, interations: {interations}, events: {events}, eps: {1000 * events / (1 + watch2.ElapsedMilliseconds)}");
 
             Console.WriteLine("Success!");
-            // Console.ReadKey();
+            Console.ReadKey();
         }
 
         private async static void Listen()
@@ -96,6 +96,13 @@ namespace InvokeC
             var eventStore = EventStore.Instance();
             var stream = client.GetStream();
             EventChunk chunk;
+            var events = 0L;
+
+            var watch = new Stopwatch();
+            var loop = 0L;
+            var length = 0L;
+
+            watch.Start();
 
             while (true)
             {
@@ -105,7 +112,11 @@ namespace InvokeC
                 {
                     chunk = await Task.Run(() => eventStore.GetFrom(position));
                     await stream.WriteAsync(chunk.Buffer, 0, chunk.Length);
+                    length += chunk.Length;
                 } while (!chunk.Empty);
+                events += 25_000L;
+                if (++loop % 25 == 0)
+                Console.WriteLine($"Push: {events}, eps: {1000L*events/watch.ElapsedMilliseconds}, data: {length / events}");
             }
         }
 
