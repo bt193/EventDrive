@@ -7,14 +7,14 @@ namespace InvokeC
 {
     public class EventChunk
     {
-        private readonly byte[] _buffer;
-        private readonly int _length;
+        public byte[] Buffer { get; private set; }
+        public int Length { get; private set; }
         public bool Empty { get; private set; }
 
         public EventChunk(byte[] buffer, int length, bool? empty = null)
         {
-            _length = length;
-            _buffer = buffer;
+            Length = length;
+            Buffer = buffer;
             Empty = empty.HasValue ? empty.Value : (length <= 0);
         }
 
@@ -27,7 +27,7 @@ namespace InvokeC
 
             using (var memoryStream = new MemoryStream())
             {
-                memoryStream.Write(_buffer, 0, _length);
+                memoryStream.Write(Buffer, 0, Length);
                 memoryStream.Seek(0, SeekOrigin.Begin);
 
                 using (var reader = new BinaryReader(memoryStream))

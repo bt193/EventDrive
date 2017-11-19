@@ -7,7 +7,7 @@ typedef char position_t[16];
 
 int hash(char key[]);
 
-void bloom_init(BloomContext *context, int size, void *key, void *value)
+void bloom_init(BloomContext *context, int size, void *key)
 {
     context->size = size;
     context->items = malloc(sizeof(BloomItem) * size);
@@ -15,7 +15,7 @@ void bloom_init(BloomContext *context, int size, void *key, void *value)
     for (int i = 0; i < size; ++i)
     {
         context->items[i].key = key;
-        context->items[i].value = value;
+        context->items[i].value = NULL;
     }
 }
 

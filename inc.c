@@ -64,7 +64,7 @@ extern void Initialize()
 {
     sha1_init(&sha1_ctx);
     Insert(&positionBtree, empty_position, &first, ComparePosition);
-    bloom_init(&bloom, 512, empty_position, &first);
+    bloom_init(&bloom, 512, empty_position);
 }
 
 extern void AppendEvent(char event[], int length)
@@ -83,7 +83,7 @@ extern void AppendEvent(char event[], int length)
     FragmentNode *node = (FragmentNode *)malloc(sizeof(FragmentNode));
 
     node->event = fragment;
-    memcpy(node->position, ((FragmentEvent *) fragment)->eventId, sizeof(position_t));
+    memcpy(node->position, ((FragmentEvent *)fragment)->eventId, sizeof(position_t));
     last->next = node;
     last->nextInStream = NULL;
     last = node;
@@ -91,7 +91,7 @@ extern void AppendEvent(char event[], int length)
     Insert(&positionBtree, node->position, node, ComparePosition);
 }
 
-extern int ReadEventsFromFrom(position_t position, char buffer[], int length)
+extern int ReadEventsFrom(position_t position, char buffer[], int length)
 {
     FragmentNode *iter = NULL, *last;
 
@@ -101,11 +101,11 @@ extern int ReadEventsFromFrom(position_t position, char buffer[], int length)
     }
     else
     {
-        iter = (FragmentNode *) bloom_lookup(&bloom, position);
+        iter = (FragmentNode *)bloom_lookup(&bloom, position);
 
         if (!iter)
         {
-            iter = (FragmentNode *) Lookup(positionBtree, position, ComparePosition);
+            iter = (FragmentNode *)Lookup(positionBtree, position, ComparePosition);
         }
     }
 
@@ -132,5 +132,44 @@ extern int ReadEventsFromFrom(position_t position, char buffer[], int length)
 
     memcpy(position, last->position, sizeof(position_t));
     bloom_insert(&bloom, last->position, last);
+    return len;
+}
+
+extern int ReadEventsFromFast(position_t position, char buffer[], int length, int *ptr)
+{
+    FragmentNode *iter, *last;
+
+    if (*ptr)
+    {
+        iter = (FragmentNode *) *ptr;
+    }
+    else
+    {
+        iter = (FragmentNode *)Lookup(positionBtree, position, ComparePosition);
+    }
+
+    if (iter == NULL)
+    {
+        return -1;
+    }
+
+    last = iter;
+
+    int len = 0;
+
+    while (iter = iter->next)
+    {
+        if (len + iter->event->length >= length)
+        {
+            break;
+        }
+
+        memcpy(&buffer[len], iter->event, iter->event->length);
+        len += iter->event->length;
+        last = iter;
+    }
+
+    *ptr = (int *)last;
+    memcpy(position, last->position, sizeof(position_t));
     return len;
 }

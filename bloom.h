@@ -18,7 +18,7 @@ struct BloomContext
 typedef struct BloomContext BloomContext;
 typedef struct BloomItem BloomItem;
 
-void bloom_init(BloomContext *context, int size, void *key, void *value);
+void bloom_init(BloomContext *context, int size, void *key);
 void *bloom_lookup(BloomContext *context, void *key);
 void bloom_insert(BloomContext *context, void *key, void *value);
 

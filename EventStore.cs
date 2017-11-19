@@ -7,16 +7,19 @@ namespace InvokeC
 {
     public class EventStore
     {
-        [DllImport("./inc.so")]
+        [DllImport("./es.so")]
         private static extern void Initialize();
 
-        [DllImport("./inc.so")]
+        [DllImport("./es.so")]
         private static extern void AppendEvent(byte[] @event, int length);
 
-        [DllImport("./inc.so")]
-        private static extern int ReadEventsFromFrom(byte[] position, byte[] buffer, int length);
+        [DllImport("./es.so")]
+        private static extern int ReadEventsFrom(byte[] position, byte[] buffer, int length);
 
-        public EventStore()
+        [DllImport("./es.so")]
+        private static extern int ReadEventsFromFast(byte[] position, byte[] buffer, int length, ref IntPtr ptr);        
+
+        protected EventStore()
         {
             Initialize();
         }
@@ -77,9 +80,17 @@ namespace InvokeC
         public EventChunk GetFrom(byte[] position)
         {
             var buffer = new byte[4096];
-            var len = ReadEventsFromFrom(position, buffer, buffer.Length);
+            var len = ReadEventsFrom(position, buffer, buffer.Length);
 
             return new EventChunk(buffer, len);
-        }
+        }     
+
+        public EventChunk GetFromFast(byte[] position, ref IntPtr ptr)
+        {
+            var buffer = new byte[4096];
+            var len = ReadEventsFromFast(position, buffer, buffer.Length, ref ptr);
+
+            return new EventChunk(buffer, len);
+        }            
     }
 }
