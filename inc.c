@@ -7,6 +7,7 @@
 
 #include "sha1.h"
 #include "btree.h"
+#include "bloom.h"
 
 typedef char byte_t;
 typedef byte_t guid_t[16];
@@ -44,11 +45,11 @@ struct FragmentNode
     struct FragmentNode *nextInStream;
 };
 
-static struct FragmentNode first, *last = &first;
+static struct FragmentNode root, *first = &root, *last = &root;
 static SHA1_CTX sha1_ctx;
 static position_t empty_position;
-
-static struct BTreeNode positionTree;
+static struct BloomContext bloom;
+static struct BTreeNode *positionTree;
 
 int ComparePosition(const void *a, const void *b)
 {
@@ -59,6 +60,7 @@ extern void Initialize()
 {
     sha1_init(&sha1_ctx);
     Insert(&positionTree, empty_position, &first, ComparePosition);
+    bloom_init(&bloom, 512);
 }
 
 extern void AppendEvent(char event[], int length)
@@ -86,21 +88,28 @@ extern void AppendEvent(char event[], int length)
 
 extern int ReadEventsFromFrom(position_t position, char buffer[], int length)
 {
-    struct FragmentNode *iter, *last;
+    struct FragmentNode *iter = NULL, *last;
 
     if (!memcmp(position, empty_position, sizeof(position_t)))
     {
-        iter = last = &first;
+        iter = first;
     }
     else
     {
-        iter = last = (struct FragmentNode *) Lookup(&positionTree, position, ComparePosition);
+        iter = (struct FragmentNode *) bloom_lookup(&bloom, position);
+
+        if (!iter)
+        {
+            iter = (struct FragmentNode *) Lookup(positionTree, position, ComparePosition);
+        }
     }
 
     if (iter == NULL)
     {
         return -1;
     }
+
+    last = iter;
 
     int len = 0;
 
@@ -117,5 +126,6 @@ extern int ReadEventsFromFrom(position_t position, char buffer[], int length)
     }
 
     memcpy(position, &last->position, sizeof(position_t));
+    bloom_insert(&bloom, &last->position, last);
     return len;
 }

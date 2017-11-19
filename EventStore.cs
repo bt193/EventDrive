@@ -76,7 +76,7 @@ namespace InvokeC
 
         public EventChunk GetFrom(byte[] position)
         {
-            var buffer = new byte[512];
+            var buffer = new byte[4096];
             var len = ReadEventsFromFrom(position, buffer, buffer.Length);
 
             return new EventChunk(buffer, len);

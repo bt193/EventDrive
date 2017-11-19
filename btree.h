@@ -10,6 +10,6 @@ struct BTreeNode
 };
 
 void *Lookup(struct BTreeNode *node, void *key, int (*compar) (const void *, const void *));
-void Insert(struct BTreeNode *node, void *key, void *value, int (*compar) (const void *, const void *));
+void Insert(struct BTreeNode **node, void *key, void *value, int (*compar)(const void *, const void *));
 
 #endif
