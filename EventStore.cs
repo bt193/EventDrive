@@ -39,30 +39,6 @@ namespace InvokeC
                 if (_instance == null)
                 {
                     _instance = new EventStore();
-
-                    {
-                        var evt = new Event
-                        {
-                            EventId = Guid.NewGuid(),
-                            StreamId = "player/adam",
-                            EventType = "PlayerCreated",
-                            Version = 0,
-                            Metadata = Encoding.UTF8.GetBytes("{}"),
-                            Payload = Encoding.UTF8.GetBytes("{}"),
-                        };
-                        
-                        // _instance.GetFrom(Guid.Empty.ToByteArray());
-                        // _instance.Append(evt);
-                        // _instance.GetFrom(Guid.Empty.ToByteArray());
-                        // _instance.Append(evt);
-                        // _instance.GetFrom(Guid.Empty.ToByteArray());
-                        // _instance.Append(evt);
-                        // _instance.GetFrom(Guid.Empty.ToByteArray());
-                        // _instance.Append(evt);
-                        // _instance.GetFrom(Guid.Empty.ToByteArray());
-                        // _instance.Append(evt);
-                        // _instance.GetFrom(Guid.Empty.ToByteArray());
-                    }
                 }
             }
             return _instance;

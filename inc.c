@@ -82,7 +82,6 @@ extern void AppendEvent(char event[], int length)
     memcpy(fragment->payload, event, length);
 
     FragmentNode *node = (FragmentNode *)malloc(sizeof(FragmentNode));
-    printf("node: %p, first: %p\n", node, first);
     node->event = fragment;
     node->next = NULL;
     memcpy(node->position, ((FragmentEvent *)fragment)->eventId, sizeof(position_t));
@@ -95,8 +94,6 @@ extern void AppendEvent(char event[], int length)
 
 extern int ReadEventsFrom(position_t position, char buffer[], int length)
 {
-    printf(". %p %p\n", first, first->next, 0);
-
     FragmentNode *iter, *last;
 
     if (!memcmp(position, empty_position, sizeof(position_t)))
@@ -129,19 +126,12 @@ extern int ReadEventsFrom(position_t position, char buffer[], int length)
             break;
         }
 
-        printf("1. 8======()\n");
         memcpy(&buffer[len], iter->event, iter->event->length);
         len += iter->event->length;
         last = iter;
-        printf("2. 8======()\n");
-
-        printf("%p\n", iter->next);
     }
 
-    printf("3. 8======()\n");
     memcpy(position, last->position, sizeof(position_t));
-    printf("4. 8======()\n");
     bloom_insert(&bloom, last->position, last);
-    printf("5. 8======()\n");
     return len;
 }
