@@ -114,7 +114,7 @@ struct FragmentNode *FindPosition(char *position)
 //     Walk(node->right, depth + 1);
 // }
 
-extern int ReadEventsFromFrom(char *position, char *buffer, int length)
+extern int ReadEventsFromFrom(sha1_t position, char *buffer, int length)
 {
     // PrintHex("before walk: ", positionTree.key, sizeof(sha1_t));
     // printf("walk - begin\n");
