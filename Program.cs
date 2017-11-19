@@ -34,7 +34,8 @@ namespace InvokeC
             var watch = new Stopwatch();
             watch.Start();
 
-            Task.Factory.StartNew(async () => Listen());
+            //Task.Factory.StartNew(async () => Listen());
+            Task.Run(async () => Listen());
 
             var evt = new Event
             {
@@ -46,60 +47,36 @@ namespace InvokeC
                 Payload = Encoding.UTF8.GetBytes("{}"),
             };
 
-            for (var i = 0; i < 1000_000; ++i) //100M -> 2.4GiB
+            for (var i = 0; i < 25_000; ++i) //100M -> 2.4GiB
             {
                 evt.EventId = Guid.NewGuid();
                 eventStore.Append(evt);
             }
 
+            var watch2 = new Stopwatch();
+            var interations = 0;
+            var position = Guid.Empty.ToByteArray();
+            var chunk = new EventChunk(new byte[0], 0, false);
+            var events = 0;
+
+            watch2.Start();
+
+            while (!chunk.Empty)
             {
-                var watch2 = new Stopwatch();
-                var interations = 0;
-                var position = Guid.Empty.ToByteArray();
-                var chunk = new EventChunk(new byte[0], 0, false);
-                var events = 0;
-
-                watch2.Start();
-
-                while (!chunk.Empty)
-                {
-                    chunk = eventStore.GetFrom(position);
-                    events += chunk.Parse().ToList().Count;
-                    ++interations;
-                }
-
-                watch2.Stop();
-                Console.WriteLine($"GetFrom: {watch2.ElapsedMilliseconds}, interations: {interations}, events: {events}, eps: {1000 * events / (1 + watch2.ElapsedMilliseconds)}");
+                chunk = eventStore.GetFrom(position);
+                events += chunk.Parse().ToList().Count;
+                ++interations;
             }
 
-            {
-                var watch2 = new Stopwatch();
-                var interations = 0;
-                var position = Guid.Empty.ToByteArray();
-                var chunk = new EventChunk(new byte[0], 0, false);
-                var events = 0;
-                IntPtr marker = IntPtr.Zero;
-
-                watch2.Start();
-
-                while (!chunk.Empty)
-                {
-                    chunk = eventStore.GetFromFast(position, ref marker);
-                    events += chunk.Parse().ToList().Count;
-                    ++interations;
-                }
-
-                watch2.Stop();
-                Console.WriteLine($"GetFromFast: {watch2.ElapsedMilliseconds}, interations: {interations}, events: {events}, eps: {1000 * events / (1 + watch2.ElapsedMilliseconds)}");
-            }
-
+            watch2.Stop();
+            Console.WriteLine($"GetFrom: {watch2.ElapsedMilliseconds}, interations: {interations}, events: {events}, eps: {1000 * events / (1 + watch2.ElapsedMilliseconds)}");
 
             Console.ReadKey();
         }
 
         private async static void Listen()
         {
-            var listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 4000);
+            var listener = new TcpListener(IPAddress.Parse("0.0.0.0"), 4000);
 
             listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             listener.Start();
@@ -108,7 +85,8 @@ namespace InvokeC
             {
                 var client = await listener.AcceptTcpClientAsync();
 
-                await FeedClient(client);
+                Console.WriteLine("new client!");
+                FeedClient(client);
             }
         }
 
@@ -118,20 +96,44 @@ namespace InvokeC
             var stream = client.GetStream();
             EventChunk chunk;
 
-            for (var i = 0; i < 1000; ++i)
+            while (true)
             {
                 var position = Guid.Empty.ToByteArray();
-                IntPtr ptr = IntPtr.Zero;
 
                 do
                 {
-                    chunk = await Task.FromResult(eventStore.GetFromFast(position, ref ptr));
+                    chunk = await Task.Run(() => eventStore.GetFrom(position));
                     await stream.WriteAsync(chunk.Buffer, 0, chunk.Length);
                 } while (!chunk.Empty);
             }
         }
+
+        // private async static void Listen()
+        // {
+        //     var listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 4000);
+
+        //     listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        //     listener.Start();
+
+        //     while (true)
+        //     {
+        //         var client = await listener.AcceptTcpClientAsync();
+
+        //         Console.WriteLine("new client!");
+        //         FeedClient(client);
+        //     }
+        // }
+
+        // private static async Task FeedClient(TcpClient client)
+        // {
+        //     var stream = client.GetStream();
+        //     var buffer = new byte[4096];
+
+        //     while (true)
+        //     {
+        //         await stream.WriteAsync(buffer, 0, buffer.Length);
+        //     }
+        // }
 #endif
     }
 }
-//evt.EventId = new Guid(i, 0, 0, new byte[8]);
-//1000000/552;10000000/5759;100000000/52384

@@ -31,21 +31,6 @@ namespace InvokeC
             if (_instance == null)
             {
                 _instance = new EventStore();
-                var evt = new Event
-                {
-                    EventId = System.Guid.NewGuid(),
-                    StreamId = "player/adam",
-                    EventType = "PlayerCreated",
-                    Version = 0,
-                    Metadata = Encoding.UTF8.GetBytes("{}"),
-                    Payload = Encoding.UTF8.GetBytes("{}"),
-                };
-
-                for (var i = 0; i < 7; ++i)
-                {
-                    evt.EventId = new Guid(i, 0, 0, new byte[8]);
-                    _instance.Append(evt);
-                }
             }
             return _instance;
         }
@@ -79,18 +64,11 @@ namespace InvokeC
 
         public EventChunk GetFrom(byte[] position)
         {
-            var buffer = new byte[4096];
+            var buffer = new byte[1024*40];
             var len = ReadEventsFrom(position, buffer, buffer.Length);
 
             return new EventChunk(buffer, len);
         }     
-
-        public EventChunk GetFromFast(byte[] position, ref IntPtr ptr)
-        {
-            var buffer = new byte[4096];
-            var len = ReadEventsFromFast(position, buffer, buffer.Length, ref ptr);
-
-            return new EventChunk(buffer, len);
-        }            
+        
     }
 }
