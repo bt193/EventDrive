@@ -6,6 +6,7 @@
 #include <cuda_stdint.h>
 
 #include "sha1.h"
+#include "btree.h"
 
 typedef char byte_t;
 typedef byte_t guid_t[16];
@@ -36,14 +37,6 @@ struct FragmentNode
     struct FragmentNode *nextInStream;
 };
 
-struct BTreeNode
-{
-    void *key;
-    void *value;
-    struct BTreeNode *left;
-    struct BTreeNode *right;
-};
-
 static struct FragmentNode *first, *last;
 static SHA1_CTX sha1_ctx;
 static sha1_t empty_hash;
@@ -55,7 +48,6 @@ static struct BTreeNode positionTree;
 // {
 //     return memcmp(a, b, sizeof(guid_t));
 // }
-
 
 void PrintHex(char *head, char *buffer, int length)
 {
@@ -71,81 +63,6 @@ void PrintHex(char *head, char *buffer, int length)
 int ComparePosition(const void *a, const void *b)
 {
     return memcmp(a, b, sizeof(sha1_t));
-}
-
-void *Lookup(struct BTreeNode *node, void *key, int (*compar) (const void *, const void *))
-{
-    //printf("start - Lookup\n");
-    while (node && node->key)
-    {
-        //PrintHex("", node->key, sizeof(sha1_t));
-        int result = (*compar) (key, node->key);
-
-        if (result == 0)
-        {
-            return node->value;
-        }
-        else if (result < 0)
-        {
-            node = node->left;
-        }
-        else
-        {
-            node = node->right;
-        }
-    }
-    //printf("end - Lookup\n");
-    return NULL;
-}
-
-void Insert(struct BTreeNode *node, void *key, void *value, int (*compar) (const void *, const void *))
-{
-    //PrintHex("Insert: ", key, sizeof(sha1_t));
-    if (!node->key)
-    {
-        node->key = key;
-        node->value = value;
-        return;
-    }
-
-    while (node)
-    {
-        int result = (*compar) (key, node->key);
-
-        if (result == 0)
-        {
-            node->value = value;
-            return;
-        }
-        else if (result < 0)
-        {
-            if (node->left == NULL)
-            {
-                struct BTreeNode *new = malloc(sizeof(struct BTreeNode));
-
-                bzero(new, sizeof(struct BTreeNode));
-                new->key = key;
-                new->value = value;
-                node->left = new;
-                return;
-            }
-            node = node->left;
-        }
-        else
-        {
-            if (node->right == NULL)
-            {
-                struct BTreeNode *new = malloc(sizeof(struct BTreeNode));
-
-                bzero(new, sizeof(struct BTreeNode));
-                new->key = key;
-                new->value = value;
-                node->right = new;
-                return;
-            }            
-            node = node->right;
-        }        
-    }
 }
 
 extern void Initialize()
@@ -183,40 +100,19 @@ extern void AppendEvent(char *event, int length)
 
 struct FragmentNode *FindPosition(char *position)
 {
-#if 1
-    struct FragmentNode *location = (struct FragmentNode *) Lookup(&positionTree, position, ComparePosition);
-#else    
-    
-    // printf("\nLooking for:\n");
-    // PrintHex("", position, sizeof(sha1_t));
-    // printf("Lookup: %p\n", Lookup(&positionTree, position, ComparePosition));
-    // return location;
-    struct FragmentNode *iter = first;
-    int index = 0;
-
-    do
-    {
-        //PrintHex(&iter->position, sizeof(sha1_t));
-        if (!memcmp(position, &iter->position, sizeof(sha1_t)))
-        {
-            return (struct FragmentNode *)iter;
-        }
-    } while (iter = iter->next);
-
-    return NULL;
-#endif    
+    return (struct FragmentNode *) Lookup(&positionTree, position, ComparePosition);
 }
 
-void Walk(struct BTreeNode *node, int depth)
-{
-    if (!node)
-    {
-        return;
-    }
-    PrintHex("Walk: ", node->key, sizeof(sha1_t));
-    Walk(node->left, depth + 1);
-    Walk(node->right, depth + 1);
-}
+// void Walk(struct BTreeNode *node, int depth)
+// {
+//     if (!node)
+//     {
+//         return;
+//     }
+//     PrintHex("Walk: ", node->key, sizeof(sha1_t));
+//     Walk(node->left, depth + 1);
+//     Walk(node->right, depth + 1);
+// }
 
 extern int ReadEventsFromFrom(char *position, char *buffer, int length)
 {
