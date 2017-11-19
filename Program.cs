@@ -55,8 +55,6 @@ namespace InvokeC
 
             watch2.Start();
 
-            //position = Guid.NewGuid().ToByteArray();
-
             while (!chunk.Empty)
             {
                 chunk = eventStore.GetFrom(position);

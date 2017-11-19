@@ -125,7 +125,7 @@ extern int ReadEventsFromFrom(position_t position, char buffer[], int length)
         last = iter;
     }
 
-    memcpy(position, &last->position, sizeof(position_t));
-    bloom_insert(&bloom, &last->position, last);
+    memcpy(position, last->position, sizeof(position_t));
+    bloom_insert(&bloom, last->position, last);
     return len;
 }

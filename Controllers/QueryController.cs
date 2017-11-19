@@ -37,9 +37,9 @@ namespace InvokeC.Controllers
         }
 
         [HttpPut]
-        public object Put([FromBody] Event @event)
+        public object Put([FromBody] List<Event> @event)
         {
-            EventStore.Instance().Append(@event);
+            //EventStore.Instance().Append(@event);
             return new { Message = "OK" };
         }
     }
