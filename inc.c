@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <cuda_stdint.h>
+#include <stdint.h>
 
 #include "sha1.h"
 #include "btree.h"
@@ -11,7 +11,7 @@
 typedef char byte_t;
 typedef byte_t guid_t[16];
 typedef byte_t sha1_t[20];
-typedef sha1_t position_t;
+typedef guid_t position_t;
 typedef char bool;
 
 #define true 1
@@ -28,6 +28,14 @@ typedef struct
     char payload[];
 } FragmentHeader;
 
+typedef struct
+{
+    uint32_t length;
+    uint32_t op;
+    sha1_t hash;
+    guid_t eventId;
+} FragmentEvent;
+
 struct FragmentNode
 {
     position_t position;
@@ -36,28 +44,11 @@ struct FragmentNode
     struct FragmentNode *nextInStream;
 };
 
-static struct FragmentNode *first, *last;
+static struct FragmentNode first, *last = &first;
 static SHA1_CTX sha1_ctx;
-static sha1_t empty_hash;
+static position_t empty_position;
 
-//static struct BTreeNode eventIdTree;
 static struct BTreeNode positionTree;
-
-// int CompareHash(const void *a, const void *b)
-// {
-//     return memcmp(a, b, sizeof(guid_t));
-// }
-
-// void PrintHex(char *head, char *buffer, int length)
-// {
-//     return;
-//     printf(head);
-//     for (int i = 0; i < length; ++i)
-//     {
-//         printf("%02hhx", buffer[i]);
-//     }
-//     printf("\n");
-// }
 
 int ComparePosition(const void *a, const void *b)
 {
@@ -66,11 +57,8 @@ int ComparePosition(const void *a, const void *b)
 
 extern void Initialize()
 {
-    first = last = (struct FragmentNode *)malloc(sizeof(struct FragmentNode));
-    bzero(first, sizeof(struct FragmentNode));
     sha1_init(&sha1_ctx);
-
-    Insert(&positionTree, empty_hash, first, ComparePosition);
+    Insert(&positionTree, empty_position, &first, ComparePosition);
 }
 
 extern void AppendEvent(char event[], int length)
@@ -89,46 +77,32 @@ extern void AppendEvent(char event[], int length)
     struct FragmentNode *node = (struct FragmentNode *)malloc(sizeof(struct FragmentNode));
 
     node->event = fragment;
-    sha1_final(&sha1_ctx, node->position);
+    memcpy(node->position, ((FragmentEvent *) fragment)->eventId, sizeof(position_t));
     last->next = node;
     last = node;
 
     Insert(&positionTree, node->position, node, ComparePosition);
-    //printf("Lookup: %p\n", Lookup(&positionTree, node->position, ComparePositionIns));
 }
-
-struct FragmentNode *FindPosition(position_t position)
-{
-    return (struct FragmentNode *) Lookup(&positionTree, position, ComparePosition);
-}
-
-// void Walk(struct BTreeNode *node, int depth)
-// {
-//     if (!node)
-//     {
-//         return;
-//     }
-//     PrintHex("Walk: ", node->key, sizeof(sha1_t));
-//     Walk(node->left, depth + 1);
-//     Walk(node->right, depth + 1);
-// }
 
 extern int ReadEventsFromFrom(position_t position, char buffer[], int length)
 {
-    // PrintHex("before walk: ", positionTree.key, sizeof(sha1_t));
-    // printf("walk - begin\n");
-    // Walk(&positionTree, 0);
-    // printf("walk - end\n");
+    struct FragmentNode *iter, *last;
 
-
-    struct FragmentNode *iter = (struct FragmentNode *)FindPosition(position);
-    struct FragmentNode *last = iter;
-    int len = 0;
+    if (!memcmp(position, empty_position, sizeof(position_t)))
+    {
+        iter = last = &first;
+    }
+    else
+    {
+        iter = last = (struct FragmentNode *) Lookup(&positionTree, position, ComparePosition);
+    }
 
     if (iter == NULL)
     {
         return -1;
     }
+
+    int len = 0;
 
     while (iter = iter->next)
     {
@@ -137,10 +111,11 @@ extern int ReadEventsFromFrom(position_t position, char buffer[], int length)
             break;
         }
 
-        last = iter;
         memcpy(&buffer[len], iter->event, iter->event->length);
         len += iter->event->length;
+        last = iter;
     }
+
     memcpy(position, &last->position, sizeof(position_t));
     return len;
 }

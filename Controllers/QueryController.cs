@@ -15,14 +15,14 @@ namespace InvokeC.Controllers
         {
             public IEnumerable<object> Events { get; set; }
             public long LatencyMs { get; set; }
-            public string Next { get; set; }
+            public Guid Next { get; set; }
         }
 
         [HttpGet]
         [Route("{from}")]
-        public Result Get(string from = "0000000000000000000000000000000000000000")
+        public Result Get(Guid from)
         {
-            var position = StringToByteArray(from);
+            var position = from.ToByteArray();
             var watch = new Stopwatch();
             watch.Start();
 
@@ -32,7 +32,7 @@ namespace InvokeC.Controllers
             {
                 Events = events,
                 LatencyMs = watch.ElapsedMilliseconds,
-                Next = ByteArrayToString(position)
+                Next = new Guid(position)
             };
         }
 
@@ -41,25 +41,6 @@ namespace InvokeC.Controllers
         {
             EventStore.Instance().Append(@event);
             return new { Message = "OK" };
-        }
-
-        public static byte[] StringToByteArray(string hex)
-        {
-            var result = Enumerable.Range(0, hex.Length)
-                .Where(x => x % 2 == 0)
-                .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
-                .ToArray();
-
-            return result;
-        }
-
-        public static string ByteArrayToString(byte[] ba)
-        {
-            StringBuilder hex = new StringBuilder(ba.Length * 2);
-
-            foreach (byte b in ba)
-                hex.AppendFormat("{0:x2}", b);
-            return hex.ToString();
         }
     }
 }

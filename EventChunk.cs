@@ -15,11 +15,16 @@ namespace InvokeC
         {
             _length = length;
             _buffer = buffer;
-            Empty = empty.HasValue ? empty.Value : (length == 0);
+            Empty = empty.HasValue ? empty.Value : (length <= 0);
         }
 
         public IEnumerable<object> Parse()
         {
+            if (Empty)
+            {
+                yield break;
+            }
+
             using (var memoryStream = new MemoryStream())
             {
                 memoryStream.Write(_buffer, 0, _length);
