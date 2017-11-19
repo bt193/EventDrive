@@ -1,14 +1,30 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace InvokeC
 {
-    class Program
+    public class Program
     {
+#if false        
+        public static void Main(string[] args)
+        {
+            BuildWebHost(args).Run();
+        }
+
+        public static IWebHost BuildWebHost(string[] args) =>
+            WebHost.CreateDefaultBuilder(args)
+                .UseStartup<Startup>()
+                .Build();
+#else
         static void Main(string[] args)
         {
             var eventStore = new EventStore();
@@ -66,5 +82,6 @@ namespace InvokeC
 
             return result;
         }
+#endif                
     }
 }

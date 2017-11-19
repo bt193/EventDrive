@@ -1,6 +1,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System;
 
 namespace InvokeC
 {
@@ -18,6 +19,32 @@ namespace InvokeC
         public EventStore()
         {
             Initialize();
+        }
+
+        private static EventStore _instance;
+
+        public static EventStore Instance()
+        {
+            if (_instance == null)
+            {
+                _instance = new EventStore();
+                var evt = new Event
+                {
+                    EventId = System.Guid.NewGuid(),
+                    StreamId = "player/adam",
+                    EventType = "PlayerCreated",
+                    Version = 0,
+                    Metadata = Encoding.UTF8.GetBytes("{}"),
+                    Payload = Encoding.UTF8.GetBytes("{}"),
+                };
+
+                for (var i = 0; i < 7; ++i)
+                {
+                    evt.EventId = new Guid(i, 0, 0, new byte[8]);
+                    _instance.Append(evt);
+                }
+            }
+            return _instance;
         }
 
         public void Append(Event evt)
@@ -49,7 +76,7 @@ namespace InvokeC
 
         public EventChunk GetFrom(byte[] position)
         {
-            var buffer = new byte[1024*64];
+            var buffer = new byte[512];
             var len = ReadEventsFromFrom(position, buffer, buffer.Length);
 
             return new EventChunk(buffer, len);

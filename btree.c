@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <strings.h>
 
-void *Lookup(struct BTreeNode *node, void *key, int (*compar) (const void *, const void *))
+void *Lookup(struct BTreeNode *node, void *key, int (*compar)(const void *, const void *))
 {
     while (node && node->key)
     {
-        int result = (*compar) (key, node->key);
+        int result = (*compar)(key, node->key);
 
         if (result == 0)
         {
@@ -24,7 +24,7 @@ void *Lookup(struct BTreeNode *node, void *key, int (*compar) (const void *, con
     return NULL;
 }
 
-void Insert(struct BTreeNode *node, void *key, void *value, int (*compar) (const void *, const void *))
+void Insert(struct BTreeNode *node, void *key, void *value, int (*compar)(const void *, const void *))
 {
     if (!node->key)
     {
@@ -35,7 +35,7 @@ void Insert(struct BTreeNode *node, void *key, void *value, int (*compar) (const
 
     while (node)
     {
-        int result = (*compar) (key, node->key);
+        int result = (*compar)(key, node->key);
 
         if (result == 0)
         {
@@ -46,12 +46,7 @@ void Insert(struct BTreeNode *node, void *key, void *value, int (*compar) (const
         {
             if (node->left == NULL)
             {
-                struct BTreeNode *new = malloc(sizeof(struct BTreeNode));
-
-                bzero(new, sizeof(struct BTreeNode));
-                new->key = key;
-                new->value = value;
-                node->left = new;
+                AllocNode(&node->left, key, value);
                 return;
             }
             node = node->left;
@@ -60,15 +55,21 @@ void Insert(struct BTreeNode *node, void *key, void *value, int (*compar) (const
         {
             if (node->right == NULL)
             {
-                struct BTreeNode *new = malloc(sizeof(struct BTreeNode));
-
-                bzero(new, sizeof(struct BTreeNode));
-                new->key = key;
-                new->value = value;
-                node->right = new;
+                AllocNode(&node->right, key, value);
                 return;
-            }            
+            }
             node = node->right;
-        }        
+        }
     }
+}
+
+void AllocNode(struct BTreeNode **node, void *key, void *value)
+{
+    struct BTreeNode *new = malloc(sizeof(struct BTreeNode));
+
+    new->key = key;
+    new->value = value;
+    new->left = NULL;
+    new->right = NULL;
+    *node = new;
 }
