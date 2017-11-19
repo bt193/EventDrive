@@ -18,7 +18,6 @@ typedef char bool;
 #define true 1
 #define false 0
 
-static int counter = 0;
 const int Event = 1;
 
 struct FragmentHeader
@@ -49,7 +48,7 @@ typedef struct FragmentEvent FragmentEvent;
 typedef struct FragmentNode FragmentNode;
 typedef struct FragmentHeader FragmentHeader;
 
-static FragmentNode root, *first = &root, *last = &root;
+static FragmentNode *first, *last;
 static SHA1_CTX sha1_ctx;
 static position_t empty_position;
 static BloomContext bloom;
@@ -62,6 +61,8 @@ int ComparePosition(const void *a, const void *b)
 
 extern void Initialize()
 {
+    first = last = (FragmentNode *)malloc(sizeof(FragmentNode));
+    bzero(first, sizeof(FragmentNode));
     sha1_init(&sha1_ctx);
     Insert(&positionBtree, empty_position, &first, ComparePosition);
     bloom_init(&bloom, 512, empty_position);
@@ -81,8 +82,9 @@ extern void AppendEvent(char event[], int length)
     memcpy(fragment->payload, event, length);
 
     FragmentNode *node = (FragmentNode *)malloc(sizeof(FragmentNode));
-
+    printf("node: %p, first: %p\n", node, first);
     node->event = fragment;
+    node->next = NULL;
     memcpy(node->position, ((FragmentEvent *)fragment)->eventId, sizeof(position_t));
     last->next = node;
     last->nextInStream = NULL;
@@ -93,7 +95,9 @@ extern void AppendEvent(char event[], int length)
 
 extern int ReadEventsFrom(position_t position, char buffer[], int length)
 {
-    FragmentNode *iter = NULL, *last;
+    printf(". %p %p\n", first, first->next, 0);
+
+    FragmentNode *iter, *last;
 
     if (!memcmp(position, empty_position, sizeof(position_t)))
     {
@@ -125,12 +129,19 @@ extern int ReadEventsFrom(position_t position, char buffer[], int length)
             break;
         }
 
+        printf("1. 8======()\n");
         memcpy(&buffer[len], iter->event, iter->event->length);
         len += iter->event->length;
         last = iter;
+        printf("2. 8======()\n");
+
+        printf("%p\n", iter->next);
     }
 
+    printf("3. 8======()\n");
     memcpy(position, last->position, sizeof(position_t));
+    printf("4. 8======()\n");
     bloom_insert(&bloom, last->position, last);
+    printf("5. 8======()\n");
     return len;
 }

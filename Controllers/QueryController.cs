@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace InvokeC.Controllers
 {
@@ -37,9 +38,24 @@ namespace InvokeC.Controllers
         }
 
         [HttpPut]
-        public object Put([FromBody] List<Event> @event)
+        public object Put([FromBody] List<Event> @events)
         {
-            //EventStore.Instance().Append(@event);
+            var evt = new Event
+            {
+                EventId = Guid.NewGuid(),
+                StreamId = "player/adam",
+                EventType = "PlayerCreated",
+                Version = 0,
+                Metadata = Encoding.UTF8.GetBytes("{}"),
+                Payload = Encoding.UTF8.GetBytes("{}"),
+            };
+
+            foreach (var item in events)
+            {
+                item.EventId = Guid.NewGuid();
+                EventStore.Instance().Append(evt);
+            }
+
             return new { Message = "OK" };
         }
     }

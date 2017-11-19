@@ -17,7 +17,7 @@ namespace InvokeC
         private static extern int ReadEventsFrom(byte[] position, byte[] buffer, int length);
 
         [DllImport("./es.so")]
-        private static extern int ReadEventsFromFast(byte[] position, byte[] buffer, int length, ref IntPtr ptr);        
+        private static extern int ReadEventsFromFast(byte[] position, byte[] buffer, int length, ref IntPtr ptr);
 
         protected EventStore()
         {
@@ -25,12 +25,45 @@ namespace InvokeC
         }
 
         private static EventStore _instance;
+        private static object _mutex = new object();
 
         public static EventStore Instance()
         {
-            if (_instance == null)
+            if (_instance != null)
             {
-                _instance = new EventStore();
+                return _instance;
+            }
+
+            lock (_mutex)
+            {
+                if (_instance == null)
+                {
+                    _instance = new EventStore();
+
+                    {
+                        var evt = new Event
+                        {
+                            EventId = Guid.NewGuid(),
+                            StreamId = "player/adam",
+                            EventType = "PlayerCreated",
+                            Version = 0,
+                            Metadata = Encoding.UTF8.GetBytes("{}"),
+                            Payload = Encoding.UTF8.GetBytes("{}"),
+                        };
+                        
+                        // _instance.GetFrom(Guid.Empty.ToByteArray());
+                        // _instance.Append(evt);
+                        // _instance.GetFrom(Guid.Empty.ToByteArray());
+                        // _instance.Append(evt);
+                        // _instance.GetFrom(Guid.Empty.ToByteArray());
+                        // _instance.Append(evt);
+                        // _instance.GetFrom(Guid.Empty.ToByteArray());
+                        // _instance.Append(evt);
+                        // _instance.GetFrom(Guid.Empty.ToByteArray());
+                        // _instance.Append(evt);
+                        // _instance.GetFrom(Guid.Empty.ToByteArray());
+                    }
+                }
             }
             return _instance;
         }
@@ -64,11 +97,10 @@ namespace InvokeC
 
         public EventChunk GetFrom(byte[] position)
         {
-            var buffer = new byte[1024*40];
+            var buffer = new byte[1024 * 40];
             var len = ReadEventsFrom(position, buffer, buffer.Length);
 
             return new EventChunk(buffer, len);
-        }     
-        
+        }
     }
 }

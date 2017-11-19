@@ -17,9 +17,10 @@ namespace InvokeC
 {
     public class Program
     {
-#if false        
+#if true        
         public static void Main(string[] args)
         {
+            EventStore.Instance();
             BuildWebHost(args).Run();
         }
 
@@ -31,47 +32,47 @@ namespace InvokeC
         static void Main(string[] args)
         {
             var eventStore = EventStore.Instance();
-            var watch = new Stopwatch();
-            watch.Start();
+            // var watch = new Stopwatch();
+            // watch.Start();
 
-            //Task.Factory.StartNew(async () => Listen());
-            Task.Run(async () => Listen());
+            // Task.Run(async () => Listen());
 
-            var evt = new Event
-            {
-                EventId = Guid.NewGuid(),
-                StreamId = "player/adam",
-                EventType = "PlayerCreated",
-                Version = 0,
-                Metadata = Encoding.UTF8.GetBytes("{}"),
-                Payload = Encoding.UTF8.GetBytes("{}"),
-            };
+            // var evt = new Event
+            // {
+            //     EventId = Guid.NewGuid(),
+            //     StreamId = "player/adam",
+            //     EventType = "PlayerCreated",
+            //     Version = 0,
+            //     Metadata = Encoding.UTF8.GetBytes("{}"),
+            //     Payload = Encoding.UTF8.GetBytes("{}"),
+            // };
 
-            for (var i = 0; i < 25_000; ++i) //100M -> 2.4GiB
-            {
-                evt.EventId = Guid.NewGuid();
-                eventStore.Append(evt);
-            }
+            // for (var i = 0; i < 25_000; ++i) //100M -> 2.4GiB
+            // {
+            //     evt.EventId = Guid.NewGuid();
+            //     eventStore.Append(evt);
+            // }
 
-            var watch2 = new Stopwatch();
-            var interations = 0;
-            var position = Guid.Empty.ToByteArray();
-            var chunk = new EventChunk(new byte[0], 0, false);
-            var events = 0;
+            // var watch2 = new Stopwatch();
+            // var interations = 0;
+            // var position = Guid.Empty.ToByteArray();
+            // var chunk = new EventChunk(new byte[0], 0, false);
+            // var events = 0;
 
-            watch2.Start();
+            // watch2.Start();
 
-            while (!chunk.Empty)
-            {
-                chunk = eventStore.GetFrom(position);
-                events += chunk.Parse().ToList().Count;
-                ++interations;
-            }
+            // while (!chunk.Empty)
+            // {
+            //     chunk = eventStore.GetFrom(position);
+            //     events += chunk.Parse().ToList().Count;
+            //     ++interations;
+            // }
 
-            watch2.Stop();
-            Console.WriteLine($"GetFrom: {watch2.ElapsedMilliseconds}, interations: {interations}, events: {events}, eps: {1000 * events / (1 + watch2.ElapsedMilliseconds)}");
+            // watch2.Stop();
+            // Console.WriteLine($"GetFrom: {watch2.ElapsedMilliseconds}, interations: {interations}, events: {events}, eps: {1000 * events / (1 + watch2.ElapsedMilliseconds)}");
 
-            Console.ReadKey();
+            Console.WriteLine("Success!");
+            // Console.ReadKey();
         }
 
         private async static void Listen()
