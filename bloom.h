@@ -7,7 +7,6 @@ struct BloomItem
 {
     void *key;
     void *value;
-    bool real;
 };
 
 struct BloomContext
@@ -16,8 +15,11 @@ struct BloomContext
     struct BloomItem *items;
 };
 
-void bloom_init(struct BloomContext *context, int size);
-void *bloom_lookup(struct BloomContext *context, void *key);
-void bloom_insert(struct BloomContext *context, void *key, void *value);
+typedef struct BloomContext BloomContext;
+typedef struct BloomItem BloomItem;
+
+void bloom_init(BloomContext *context, int size, void *key, void *value);
+void *bloom_lookup(BloomContext *context, void *key);
+void bloom_insert(BloomContext *context, void *key, void *value);
 
 #endif

@@ -21,35 +21,39 @@ typedef char bool;
 static int counter = 0;
 const int Event = 1;
 
-typedef struct
+struct FragmentHeader
 {
     uint32_t length;
     uint32_t op;
     sha1_t hash;
     char payload[];
-} FragmentHeader;
+};
 
-typedef struct
+struct FragmentEvent
 {
     uint32_t length;
     uint32_t op;
     sha1_t hash;
     guid_t eventId;
-} FragmentEvent;
+};
 
 struct FragmentNode
 {
     position_t position;
-    FragmentHeader *event;
+    struct FragmentHeader *event;
     struct FragmentNode *next;
     struct FragmentNode *nextInStream;
 };
 
-static struct FragmentNode root, *first = &root, *last = &root;
+typedef struct FragmentEvent FragmentEvent;
+typedef struct FragmentNode FragmentNode;
+typedef struct FragmentHeader FragmentHeader;
+
+static FragmentNode root, *first = &root, *last = &root;
 static SHA1_CTX sha1_ctx;
 static position_t empty_position;
-static struct BloomContext bloom;
-static struct BTreeNode *positionTree;
+static BloomContext bloom;
+static BTreeNode *positionBtree;
 
 int ComparePosition(const void *a, const void *b)
 {
@@ -59,8 +63,8 @@ int ComparePosition(const void *a, const void *b)
 extern void Initialize()
 {
     sha1_init(&sha1_ctx);
-    Insert(&positionTree, empty_position, &first, ComparePosition);
-    bloom_init(&bloom, 512);
+    Insert(&positionBtree, empty_position, &first, ComparePosition);
+    bloom_init(&bloom, 512, empty_position, &first);
 }
 
 extern void AppendEvent(char event[], int length)
@@ -76,19 +80,20 @@ extern void AppendEvent(char event[], int length)
     sha1_final(&sha1_ctx, fragment->hash);
     memcpy(fragment->payload, event, length);
 
-    struct FragmentNode *node = (struct FragmentNode *)malloc(sizeof(struct FragmentNode));
+    FragmentNode *node = (FragmentNode *)malloc(sizeof(FragmentNode));
 
     node->event = fragment;
     memcpy(node->position, ((FragmentEvent *) fragment)->eventId, sizeof(position_t));
     last->next = node;
+    last->nextInStream = NULL;
     last = node;
 
-    Insert(&positionTree, node->position, node, ComparePosition);
+    Insert(&positionBtree, node->position, node, ComparePosition);
 }
 
 extern int ReadEventsFromFrom(position_t position, char buffer[], int length)
 {
-    struct FragmentNode *iter = NULL, *last;
+    FragmentNode *iter = NULL, *last;
 
     if (!memcmp(position, empty_position, sizeof(position_t)))
     {
@@ -96,11 +101,11 @@ extern int ReadEventsFromFrom(position_t position, char buffer[], int length)
     }
     else
     {
-        iter = (struct FragmentNode *) bloom_lookup(&bloom, position);
+        iter = (FragmentNode *) bloom_lookup(&bloom, position);
 
         if (!iter)
         {
-            iter = (struct FragmentNode *) Lookup(positionTree, position, ComparePosition);
+            iter = (FragmentNode *) Lookup(positionBtree, position, ComparePosition);
         }
     }
 

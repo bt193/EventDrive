@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <strings.h>
 
-void *Lookup(struct BTreeNode *node, void *key, int (*compar)(const void *, const void *))
+void *Lookup(BTreeNode *node, void *key, int (*compar)(const void *, const void *))
 {
     while (node && node->key)
     {
@@ -24,11 +24,11 @@ void *Lookup(struct BTreeNode *node, void *key, int (*compar)(const void *, cons
     return NULL;
 }
 
-void Insert(struct BTreeNode **node, void *key, void *value, int (*compar)(const void *, const void *))
+void Insert(BTreeNode **node, void *key, void *value, int (*compar)(const void *, const void *))
 {
     if (*node == NULL)
     {
-        struct BTreeNode *new = malloc(sizeof(struct BTreeNode));
+        BTreeNode *new = malloc(sizeof(BTreeNode));
 
         new->key = key;
         new->value = value;

@@ -41,7 +41,7 @@ namespace InvokeC
                 Payload = Encoding.UTF8.GetBytes("{}"),
             };
 
-            for (var i = 0; i < 1_000_000; ++i)
+            for (var i = 0; i < 1_000_000; ++i) //2.4GiB
             {
                 evt.EventId = Guid.NewGuid();
                 eventStore.Append(evt);
@@ -68,3 +68,4 @@ namespace InvokeC
     }
 }
 //evt.EventId = new Guid(i, 0, 0, new byte[8]);
+//1000000/552;10000000/5759;100000000/52384

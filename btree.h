@@ -9,7 +9,9 @@ struct BTreeNode
     struct BTreeNode *right;
 };
 
-void *Lookup(struct BTreeNode *node, void *key, int (*compar) (const void *, const void *));
-void Insert(struct BTreeNode **node, void *key, void *value, int (*compar)(const void *, const void *));
+typedef struct BTreeNode BTreeNode;
+
+void *Lookup(BTreeNode *node, void *key, int (*compar) (const void *, const void *));
+void Insert(BTreeNode **node, void *key, void *value, int (*compar)(const void *, const void *));
 
 #endif
