@@ -10,15 +10,14 @@
 
 typedef char byte_t;
 typedef byte_t guid_t[16];
-typedef byte_t guid_t[16];
 typedef byte_t sha1_t[20];
+typedef sha1_t position_t;
 typedef char bool;
 
 #define true 1
 #define false 0
 
 static int counter = 0;
-
 const int Event = 1;
 
 typedef struct
@@ -31,7 +30,7 @@ typedef struct
 
 struct FragmentNode
 {
-    sha1_t position;
+    position_t position;
     FragmentHeader *event;
     struct FragmentNode *next;
     struct FragmentNode *nextInStream;
@@ -49,20 +48,20 @@ static struct BTreeNode positionTree;
 //     return memcmp(a, b, sizeof(guid_t));
 // }
 
-void PrintHex(char *head, char *buffer, int length)
-{
-    return;
-    printf(head);
-    for (int i = 0; i < length; ++i)
-    {
-        printf("%02hhx", buffer[i]);
-    }
-    printf("\n");
-}
+// void PrintHex(char *head, char *buffer, int length)
+// {
+//     return;
+//     printf(head);
+//     for (int i = 0; i < length; ++i)
+//     {
+//         printf("%02hhx", buffer[i]);
+//     }
+//     printf("\n");
+// }
 
 int ComparePosition(const void *a, const void *b)
 {
-    return memcmp(a, b, sizeof(sha1_t));
+    return memcmp(a, b, sizeof(position_t));
 }
 
 extern void Initialize()
@@ -74,7 +73,7 @@ extern void Initialize()
     Insert(&positionTree, empty_hash, first, ComparePosition);
 }
 
-extern void AppendEvent(char *event, int length)
+extern void AppendEvent(char event[], int length)
 {
     int len = length + sizeof(FragmentHeader);
     FragmentHeader *fragment = (FragmentHeader *)malloc(len);
@@ -98,7 +97,7 @@ extern void AppendEvent(char *event, int length)
     //printf("Lookup: %p\n", Lookup(&positionTree, node->position, ComparePositionIns));
 }
 
-struct FragmentNode *FindPosition(char *position)
+struct FragmentNode *FindPosition(position_t position)
 {
     return (struct FragmentNode *) Lookup(&positionTree, position, ComparePosition);
 }
@@ -114,7 +113,7 @@ struct FragmentNode *FindPosition(char *position)
 //     Walk(node->right, depth + 1);
 // }
 
-extern int ReadEventsFromFrom(sha1_t position, char *buffer, int length)
+extern int ReadEventsFromFrom(position_t position, char buffer[], int length)
 {
     // PrintHex("before walk: ", positionTree.key, sizeof(sha1_t));
     // printf("walk - begin\n");
@@ -142,6 +141,6 @@ extern int ReadEventsFromFrom(sha1_t position, char *buffer, int length)
         memcpy(&buffer[len], iter->event, iter->event->length);
         len += iter->event->length;
     }
-    memcpy(position, &last->position, sizeof(sha1_t));
+    memcpy(position, &last->position, sizeof(position_t));
     return len;
 }

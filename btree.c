@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <strings.h>
 
+void AllocNode(struct BTreeNode **node, void *key, void *value);
+
 void *Lookup(struct BTreeNode *node, void *key, int (*compar)(const void *, const void *))
 {
     while (node && node->key)
