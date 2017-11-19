@@ -13,7 +13,7 @@ struct BloomItem
 struct BloomContext
 {
     int size;
-    struct BloomItem items;
+    struct BloomItem *items;
 };
 
 void bloom_init(struct BloomContext *context, int size);
