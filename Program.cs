@@ -115,37 +115,10 @@ namespace InvokeC
                     length += chunk.Length;
                 } while (!chunk.Empty);
                 events += 25_000L;
-                if (++loop % 25 == 0)
+                if (++loop % 40 == 0)
                 Console.WriteLine($"Push: {events}, eps: {1000L*events/watch.ElapsedMilliseconds}, data: {length / events}");
             }
         }
-
-        // private async static void Listen()
-        // {
-        //     var listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 4000);
-
-        //     listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        //     listener.Start();
-
-        //     while (true)
-        //     {
-        //         var client = await listener.AcceptTcpClientAsync();
-
-        //         Console.WriteLine("new client!");
-        //         FeedClient(client);
-        //     }
-        // }
-
-        // private static async Task FeedClient(TcpClient client)
-        // {
-        //     var stream = client.GetStream();
-        //     var buffer = new byte[4096];
-
-        //     while (true)
-        //     {
-        //         await stream.WriteAsync(buffer, 0, buffer.Length);
-        //     }
-        // }
 #endif
     }
 }
