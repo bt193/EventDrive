@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-project(es C)
+project(eventstore CXX C)
 
-file(GLOB SOURCES "*.c")
+file(GLOB C_SOURCES "*.c")
+file(GLOB CXX_SOURCES "*.cpp")
 
-add_library(es SHARED ${SOURCES})
+add_library(eventstore SHARED ${CXX_SOURCES} ${C_SOURCES})
