@@ -1,4 +1,6 @@
 #include "TemporaryMappedFileAllocator.hpp"
+#include "../Segments/MemoryMappedFileSegment.hpp"
+#include <stdlib.h>
 
 TemporaryMappedFileAllocator::TemporaryMappedFileAllocator()
 {
@@ -8,7 +10,7 @@ TemporaryMappedFileAllocator::~TemporaryMappedFileAllocator()
 {
 }
 
-MemorySegment *TemporaryMappedFileAllocator::Allocate(char *input)
+int TemporaryMappedFileAllocator::GetFd(char *input)
 {
-    return nullptr;
+    return mkstemps("prefixXXXXXXsuffix", 6);
 }

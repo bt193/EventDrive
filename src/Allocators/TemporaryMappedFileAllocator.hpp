@@ -4,16 +4,18 @@
 
 class TemporaryMappedFileAllocator : public FileAllocator
 {
-  public:
-    TemporaryMappedFileAllocator();
-    virtual ~TemporaryMappedFileAllocator();
-    MemorySegment *Allocate(char *input);
+public:
+  TemporaryMappedFileAllocator();
+  virtual ~TemporaryMappedFileAllocator();
 
-  private:
-    TemporaryMappedFileAllocator(TemporaryMappedFileAllocator &&) = default;
-    TemporaryMappedFileAllocator(const TemporaryMappedFileAllocator &) = default;
-    TemporaryMappedFileAllocator &operator=(TemporaryMappedFileAllocator &&) = default;
-    TemporaryMappedFileAllocator &operator=(const TemporaryMappedFileAllocator &) = default;
+protected:
+  int GetFd(char *input);
+
+private:
+  TemporaryMappedFileAllocator(TemporaryMappedFileAllocator &&) = default;
+  TemporaryMappedFileAllocator(const TemporaryMappedFileAllocator &) = default;
+  TemporaryMappedFileAllocator &operator=(TemporaryMappedFileAllocator &&) = default;
+  TemporaryMappedFileAllocator &operator=(const TemporaryMappedFileAllocator &) = default;
 };
 
 #endif

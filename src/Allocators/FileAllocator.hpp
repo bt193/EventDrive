@@ -4,16 +4,19 @@
 
 class FileAllocator : public Allocator
 {
-  public:
-    FileAllocator();
-    virtual ~FileAllocator();
-    virtual MemorySegment *Allocate(char *input) = 0;
+public:
+  FileAllocator();
+  virtual ~FileAllocator();
+  MemorySegment *Allocate(char *input);
 
-  private:
-    FileAllocator(FileAllocator &&) = default;
-    FileAllocator(const FileAllocator &) = default;
-    FileAllocator &operator=(FileAllocator &&) = default;
-    FileAllocator &operator=(const FileAllocator &) = default;
+protected:
+  virtual int GetFd(char *input) = 0;
+
+private:
+  FileAllocator(FileAllocator &&) = default;
+  FileAllocator(const FileAllocator &) = default;
+  FileAllocator &operator=(FileAllocator &&) = default;
+  FileAllocator &operator=(const FileAllocator &) = default;
 };
 
 #endif

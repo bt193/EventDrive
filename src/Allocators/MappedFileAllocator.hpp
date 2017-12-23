@@ -4,16 +4,18 @@
 
 class MappedFileAllocator : public FileAllocator
 {
-  public:
-    MappedFileAllocator();
-    virtual ~MappedFileAllocator();
-    MemorySegment *Allocate(char *input);
+public:
+  MappedFileAllocator();
+  virtual ~MappedFileAllocator();
 
-  private:
-    MappedFileAllocator(MappedFileAllocator &&) = default;
-    MappedFileAllocator(const MappedFileAllocator &) = default;
-    MappedFileAllocator &operator=(MappedFileAllocator &&) = default;
-    MappedFileAllocator &operator=(const MappedFileAllocator &) = default;
+protected:
+  int GetFd(char *input);
+
+private:
+  MappedFileAllocator(MappedFileAllocator &&) = default;
+  MappedFileAllocator(const MappedFileAllocator &) = default;
+  MappedFileAllocator &operator=(MappedFileAllocator &&) = default;
+  MappedFileAllocator &operator=(const MappedFileAllocator &) = default;
 };
 
 #endif

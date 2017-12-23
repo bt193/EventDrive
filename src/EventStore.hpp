@@ -8,6 +8,7 @@ class EventStore
   public:
     EventStore();
     ~EventStore();
+    
 
   private:
     EventStore(EventStore &&) = default;

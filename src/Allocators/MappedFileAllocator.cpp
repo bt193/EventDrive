@@ -1,4 +1,7 @@
 #include "MappedFileAllocator.hpp"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 MappedFileAllocator::MappedFileAllocator()
 {
@@ -8,8 +11,7 @@ MappedFileAllocator::~MappedFileAllocator()
 {
 }
 
-MemorySegment *MappedFileAllocator::Allocate(char *input)
+int MappedFileAllocator::GetFd(char *input)
 {
-    return nullptr;
+    return open(input, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 }
-
