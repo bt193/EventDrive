@@ -11,6 +11,7 @@ class Index
     Index(Allocator *dataAllocator, Allocator *metadataAllocator);
     ~Index();
     void Scan();
+    void Put(char *memory, int length);
 
   private:
     Index() = default;
@@ -18,10 +19,15 @@ class Index
     Index(const Index &) = default;
     Index &operator=(Index &&) = default;
     Index &operator=(const Index &) = default;
+
+    MemorySegment *CurrentSegment();
+    MemorySegment *AddSegment();
+
     void LoadData();
     Allocator *_dataAllocator;
     Allocator *_metadataAllocator;
     std::vector<MemorySegment *> _chunks;
+    MemorySegment *_currentSegment = nullptr;
 };
 
 #endif

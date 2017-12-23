@@ -1,5 +1,5 @@
 #include "InMemoryAllocator.hpp"
-#include "../Segments/InMemorySegment.hpp"
+#include "../Segments/MemorySegment.hpp"
 #include <sys/mman.h>
 #include <cstdint>
 #include <unistd.h>
@@ -19,5 +19,5 @@ MemorySegment *InMemoryAllocator::Allocate(char *input)
 
     mprotect(memory + ChunkSize, PageSize, PROT_NONE);
 
-    return new InMemorySegment(memory, length);
+    return new MemorySegment(memory, ChunkSize, length);
 }

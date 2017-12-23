@@ -5,17 +5,17 @@ class Index;
 
 class EventStore
 {
-  public:
-    EventStore();
-    ~EventStore();
-    
+public:
+  EventStore();
+  ~EventStore();
+  void Put(char *memory, int length);
 
-  private:
-    EventStore(EventStore &&) = default;
-    EventStore(const EventStore &) = default;
-    EventStore &operator=(EventStore &&) = default;
-    EventStore &operator=(const EventStore &) = default;
-    Index *_index;
+private:
+  EventStore(EventStore &&) = default;
+  EventStore(const EventStore &) = default;
+  EventStore &operator=(EventStore &&) = default;
+  EventStore &operator=(const EventStore &) = default;
+  Index *_index;
 };
 
 #endif

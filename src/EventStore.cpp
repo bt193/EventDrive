@@ -11,3 +11,8 @@ EventStore::EventStore()
 EventStore::~EventStore()
 {
 }
+
+void EventStore::Put(char *memory, int length)
+{
+    _index->Put(memory, length);
+}

@@ -5,7 +5,7 @@
 class MemoryMappedFileSegment : public MemorySegment
 {
   public:
-    MemoryMappedFileSegment(char *memory, int length, int fd);
+    MemoryMappedFileSegment(char *memory, int length, int fullLength, int fd);
     ~MemoryMappedFileSegment();
 
   private:
