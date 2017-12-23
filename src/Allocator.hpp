@@ -1,15 +1,15 @@
 #ifndef __ALLOCATOR_HPP__
 #define __ALLOCATOR_HPP__
-
-class MemorySegment;
+#include "MemorySegment.hpp"
 
 class Allocator
 {
-public:
+  public:
     Allocator();
     ~Allocator();
     virtual MemorySegment *Allocate(char *input) = 0;
-private:
+
+  private:
     Allocator(Allocator &&) = default;
     Allocator(const Allocator &) = default;
     Allocator &operator=(Allocator &&) = default;

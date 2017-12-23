@@ -4,11 +4,12 @@
 
 class InMemoryAllocator : public Allocator
 {
-public:
+  public:
     InMemoryAllocator();
     ~InMemoryAllocator();
     MemorySegment *Allocate(char *input);
-private:
+
+  private:
     InMemoryAllocator(InMemoryAllocator &&) = default;
     InMemoryAllocator(const InMemoryAllocator &) = default;
     InMemoryAllocator &operator=(InMemoryAllocator &&) = default;

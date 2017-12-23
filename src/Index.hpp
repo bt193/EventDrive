@@ -7,11 +7,12 @@ class MemorySegment;
 
 class Index
 {
-public:
+  public:
     Index(Allocator *dataAllocator, Allocator *metadataAllocator);
     ~Index();
     void Scan();
-private:
+
+  private:
     Index() = default;
     Index(Index &&) = default;
     Index(const Index &) = default;

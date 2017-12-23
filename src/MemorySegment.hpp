@@ -3,10 +3,11 @@
 
 class MemorySegment
 {
-public:
+  public:
     MemorySegment();
     ~MemorySegment();
-private:
+
+  private:
     MemorySegment(MemorySegment &&) = default;
     MemorySegment(const MemorySegment &) = default;
     MemorySegment &operator=(MemorySegment &&) = default;

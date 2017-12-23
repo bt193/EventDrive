@@ -5,10 +5,11 @@ class Index;
 
 class EventStore
 {
-public:
+  public:
     EventStore();
     ~EventStore();
-private:
+
+  private:
     EventStore(EventStore &&) = default;
     EventStore(const EventStore &) = default;
     EventStore &operator=(EventStore &&) = default;
