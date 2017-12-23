@@ -7,6 +7,7 @@ class TemporaryMappedFileAllocator : public FileAllocator
   public:
     TemporaryMappedFileAllocator();
     virtual ~TemporaryMappedFileAllocator();
+    MemorySegment *Allocate(char *input);
 
   private:
     TemporaryMappedFileAllocator(TemporaryMappedFileAllocator &&) = default;
