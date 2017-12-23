@@ -6,7 +6,7 @@ class TemporaryMappedFileAllocator : public FileAllocator
 {
   public:
     TemporaryMappedFileAllocator();
-    ~TemporaryMappedFileAllocator();
+    virtual ~TemporaryMappedFileAllocator();
 
   private:
     TemporaryMappedFileAllocator(TemporaryMappedFileAllocator &&) = default;

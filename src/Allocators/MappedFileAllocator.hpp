@@ -6,7 +6,7 @@ class MappedFileAllocator : public FileAllocator
 {
   public:
     MappedFileAllocator();
-    ~MappedFileAllocator();
+    virtual ~MappedFileAllocator();
     MemorySegment *Allocate(char *input);
 
   private:

@@ -1,12 +1,8 @@
 #include "InMemoryAllocator.hpp"
+#include "../Segments/InMemorySegment.hpp"
 #include <sys/mman.h>
 #include <cstdint>
 #include <unistd.h>
-
-const long PageSize = sysconf(_SC_PAGE_SIZE);
-const long ChunkShift = 28;
-const long ChunkSize = 1 << ChunkShift; // 256 MiB
-const long ChunkMask = ChunkSize - 1;
 
 InMemoryAllocator::InMemoryAllocator()
 {
@@ -23,6 +19,5 @@ MemorySegment *InMemoryAllocator::Allocate(char *input)
 
     mprotect(memory + ChunkSize, PageSize, PROT_NONE);
 
-
-    return nullptr;
+    return new InMemorySegment(memory, length);
 }

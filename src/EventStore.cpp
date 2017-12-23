@@ -1,7 +1,7 @@
 #include "EventStore.hpp"
 #include "Index.hpp"
-#include "InMemoryAllocator.hpp"
-#include "MappedFileAllocator.hpp"
+#include "Allocators/InMemoryAllocator.hpp"
+#include "Allocators/MappedFileAllocator.hpp"
 
 EventStore::EventStore()
 {

@@ -6,7 +6,7 @@ class FileAllocator : public Allocator
 {
   public:
     FileAllocator();
-    ~FileAllocator();
+    virtual ~FileAllocator();
     virtual MemorySegment *Allocate(char *input) = 0;
 
   private:

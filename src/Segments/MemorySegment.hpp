@@ -3,15 +3,20 @@
 
 class MemorySegment
 {
-  public:
-    MemorySegment();
-    ~MemorySegment();
+public:
+  MemorySegment(char *memory, int length);
+  ~MemorySegment();
 
-  private:
-    MemorySegment(MemorySegment &&) = default;
-    MemorySegment(const MemorySegment &) = default;
-    MemorySegment &operator=(MemorySegment &&) = default;
-    MemorySegment &operator=(const MemorySegment &) = default;
+protected:
+  char *_memory;
+  int _length;
+
+private:
+  MemorySegment() = default;
+  MemorySegment(MemorySegment &&) = default;
+  MemorySegment(const MemorySegment &) = default;
+  MemorySegment &operator=(MemorySegment &&) = default;
+  MemorySegment &operator=(const MemorySegment &) = default;
 };
 
 #endif
