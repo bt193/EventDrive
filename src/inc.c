@@ -12,6 +12,7 @@
 typedef char byte_t;
 typedef byte_t guid_t[16];
 typedef byte_t sha1_t[20];
+typedef byte_t sha256_t[32];
 typedef guid_t position_t;
 typedef char bool;
 
