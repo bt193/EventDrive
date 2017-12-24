@@ -19,7 +19,9 @@ Index::~Index()
 
 void Index::Scan()
 {
+    printf("Starting scan...\n");
     LoadData();
+    printf("Scan done!\n");
 }
 
 void Index::LoadData()
