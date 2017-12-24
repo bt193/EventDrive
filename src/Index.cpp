@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdio.h>
+#include <string.h>
 
 Index::Index(Allocator *dataAllocator, Allocator *metadataAllocator)
 {
@@ -28,30 +29,78 @@ void Index::LoadData()
 
     for (auto i = 0;; ++i)
     {
+        snprintf(filename, sizeof(filename), "Index/Default/Chunk#%08x.data", i);
+
         if (stat(filename, &statbuf))
         {
             break;
         }
 
-        snprintf(filename, sizeof(filename), "Index/Default/Chunk#%08x.data", i);
+        printf("Scanning: %s\n", filename);
         auto segment = _dataAllocator->Allocate(filename);
 
+        while (char *mem = segment->Peek(sizeof(int)))
+        {
+            int op = *(int *)mem;
+            printf("Scanning, op: %d\n", op);
+            if (op == OpCode::BeginTransaction)
+            {
+                //printf("BeginTransaction\n");
+                segment->Skip(sizeof(int));
+            }
+            else if (op == OpCode::Commit)
+            {
+                //printf("Commit\n");
+                segment->Skip(sizeof(int));
+            }
+            else if (op > 0)
+            {
+                //printf("Skip: %d\n", op);
+                segment->Skip(op);
+            }
+            else if (op == OpCode::None)
+            {
+                //printf("End!!!\n");
+                break;
+            }
+            else
+            {
+                //printf("Corrupt\n");
+                break;
+            }
+        }
         _chunks.push_back(segment);
     }
 }
 
 void Index::Put(char *memory, int length)
 {
-    // std::vector<MemorySegment *> scope;
-    if (!CurrentSegment()->Put(memory, length))
+    char *addr;
+
+    if (!CurrentSegment()->BeginTransaction())
     {
-        AddSegment();
-        CurrentSegment()->Put(memory, length);
+        AddSegment()->BeginTransaction();
     }
 
+    if (!(addr = CurrentSegment()->Peek(length + sizeof(int))))
+    {
+        AddSegment();
+        addr = CurrentSegment()->Peek(length + sizeof(int));
+    }
+
+    *(int *) addr = length + sizeof(int);
+    memcpy(addr + sizeof(int), memory, length);
+    CurrentSegment()->Skip(length + sizeof(int));
+
+
+    if (!CurrentSegment()->Commit())
+    {
+        AddSegment()->Commit();
+    }
+
+    // std::vector<MemorySegment *> scope;
     // for (auto x : scope)
     // {
-
     // }
 }
 

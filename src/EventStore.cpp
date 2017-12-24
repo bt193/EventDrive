@@ -12,6 +12,11 @@ EventStore::~EventStore()
 {
 }
 
+void EventStore::Initialize()
+{
+    _index->Scan();
+}
+
 void EventStore::Put(char *memory, int length)
 {
     _index->Put(memory, length);

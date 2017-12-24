@@ -8,6 +8,7 @@ class EventStore
 public:
   EventStore();
   ~EventStore();
+  void Initialize();
   void Put(char *memory, int length);
 
 private:

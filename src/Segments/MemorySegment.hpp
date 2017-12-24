@@ -3,6 +3,7 @@
 
 enum OpCode : int
 {
+  None = 0,
   BeginTransaction = -1,
   Commit = -2
 };
@@ -15,7 +16,8 @@ public:
   virtual bool BeginTransaction();
   virtual bool Commit();
   virtual bool Put(char *memory, int length);
-  virtual char *Peek(int length);
+  char *Peek(int length);
+  void Skip(int length);
   virtual void FlushAsync();
   virtual void FlushSync();
 

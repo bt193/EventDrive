@@ -1,6 +1,8 @@
 #include "MemorySegment.hpp"
 #include <string.h>
 
+#include <stdio.h>
+
 MemorySegment::MemorySegment(char *memory, int length, int fullLength)
 {
     _memory = memory;
@@ -22,16 +24,16 @@ void MemorySegment::FlushSync()
 
 bool MemorySegment::BeginTransaction()
 {
+    //printf("PUT BeginTransaction\n");
     int buffer[]{OpCode::BeginTransaction};
-    auto dest = Peek(sizeof(buffer));
 
     return Put((char *)buffer, sizeof(buffer));
 }
 
 bool MemorySegment::Commit()
 {
+    //printf("PUT Commit\n");
     int buffer[]{OpCode::Commit};
-    auto dest = Peek(sizeof(buffer));
 
     return Put((char *)buffer, sizeof(buffer));
 }
@@ -59,4 +61,9 @@ char *MemorySegment::Peek(int length)
     }
 
     return _memory + _offset;
+}
+
+void MemorySegment::Skip(int length)
+{
+    _offset += length;
 }

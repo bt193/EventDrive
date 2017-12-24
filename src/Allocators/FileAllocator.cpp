@@ -26,7 +26,7 @@ MemorySegment *FileAllocator::Allocate(char *input)
         write(fd, empty, sizeof(empty));
     }
     lseek(fd, 0, SEEK_SET);
-    auto memory = (char *)mmap(NULL, ChunkSize + PageSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    auto memory = (char *)mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     mprotect(memory + ChunkSize, PageSize, PROT_NONE);
     return new MemoryMappedFileSegment(memory, ChunkSize, length, fd);
 }
