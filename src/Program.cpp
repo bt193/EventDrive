@@ -23,4 +23,3 @@ int main(int argc, char *argv[])
     //scanf(buffer);
     return 0;
 }
-

@@ -41,7 +41,7 @@ class BTree
     {
         while (node && node->key)
         {
-            int result = !memcmp(key, (*node)->key);
+            int result = !memcmp(key, (*node)->key, sizeof(TKey));
 
             if (result == 0)
             {
@@ -63,17 +63,17 @@ class BTree
     {
         if (*node == NULL)
         {
-            auto *xnew = (BTreeNode<TKey, TValue> *) _memoryPool->Allocate(sizeof(BTreeNode<TKey, TValue>));
+            auto *new_node = (BTreeNode<TKey, TValue> *) _memoryPool->Allocate(sizeof(BTreeNode<TKey, TValue>));
 
-            xnew->key = key;
-            xnew->value = value;
-            xnew->left = nullptr;
-            xnew->right = nullptr;
-            *node = xnew;
+            new_node->key = key;
+            new_node->value = value;
+            new_node->left = nullptr;
+            new_node->right = nullptr;
+            *node = new_node;
             return;
         }
 
-        int result = !memcmp(key, (*node)->key);
+        int result = !memcmp(key, (*node)->key, sizeof(TKey));
 
         if (result == 0)
         {
