@@ -3,18 +3,15 @@
 
 class PositionIndex
 {
-public:
-PositionIndex();
-~PositionIndex();
+  public:
+    PositionIndex();
+    ~PositionIndex();
 
-private:
-PositionIndex(PositionIndex &&) = default;
-PositionIndex(const PositionIndex &) = default;
-PositionIndex &operator=(PositionIndex &&) = default;
-PositionIndex &operator=(const PositionIndex &) = default;
-
+  private:
+    PositionIndex(PositionIndex &&) = default;
+    PositionIndex(const PositionIndex &) = default;
+    PositionIndex &operator=(PositionIndex &&) = default;
+    PositionIndex &operator=(const PositionIndex &) = default;
 };
 
 #endif
-
-

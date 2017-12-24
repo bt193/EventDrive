@@ -23,11 +23,11 @@ public:
   virtual void FlushSync();
 
 protected:
-  char *_memory;
   int _length;
   int _fullLength;
   int _offset = 0;
   bool _dirty = false;
+  char *_memory;
 
 private:
   MemorySegment() = default;

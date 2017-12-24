@@ -9,12 +9,6 @@ class Event;
 
 // [x] EventId
 // Keep on same page
-struct EventIdCollisionIndexNode
-{
-    EventIdCollisionIndexNode *Left;
-    EventIdCollisionIndexNode *Right;
-    eventid_t EventId;
-};
 
 // [ ] Position
 struct PositionIndexNode

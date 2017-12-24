@@ -7,4 +7,3 @@ PositionIndex::PositionIndex()
 PositionIndex::~PositionIndex()
 {
 }
-

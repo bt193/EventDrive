@@ -12,6 +12,7 @@ MemorySegment::MemorySegment(char *memory, int length, int fullLength)
 
 MemorySegment::~MemorySegment()
 {
+    //munmap(_memory, _fullLength);
 }
 
 void MemorySegment::FlushAsync()
