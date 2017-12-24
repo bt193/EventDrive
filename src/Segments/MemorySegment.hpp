@@ -5,7 +5,8 @@ enum OpCode : int
 {
   None = 0,
   BeginTransaction = -1,
-  Commit = -2
+  Commit = -2,
+  EndOfFile = -3
 };
 
 class MemorySegment
