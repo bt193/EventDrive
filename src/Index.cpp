@@ -70,6 +70,7 @@ void Index::LoadData()
             }
         }
         _chunks.push_back(segment);
+        _currentSegment = segment;
     }
 }
 

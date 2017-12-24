@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 
     eventStore.Initialize();
 
-    for (auto i = 0; i < 5; ++i)
+    for (auto i = 0; i < 1; ++i)
     {
         eventStore.Put(buffer, sizeof(buffer));
     }
