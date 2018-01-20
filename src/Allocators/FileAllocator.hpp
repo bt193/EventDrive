@@ -17,6 +17,7 @@ private:
   FileAllocator(const FileAllocator &) = default;
   FileAllocator &operator=(FileAllocator &&) = default;
   FileAllocator &operator=(const FileAllocator &) = default;
+  int _fd;
 };
 
 #endif

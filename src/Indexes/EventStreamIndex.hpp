@@ -6,49 +6,10 @@ typedef char eventid_t[16];
 typedef sha256_t position_t;
 
 class MemoryPool;
+class Fragment;
+class EventStreamIndexNode;
 
-// class Stream;
-// template <typename T>
-// struct BTreeNode
-// {
-//     T *Left;
-//     T *Right;
-// };
-
-// struct EventIdBTreeNode : public BTreeNode<EventIdBTreeNode>
-// {
-//     eventid_t EventId;
-// };
-
-// template <typename T>
-// class BTreeIndex
-// {
-//     // insert
-//     // lookup
-//     virtual T *Allocate() = 0;
-// };
-
-// class EventIdIndex : public BTreeIndex<EventIdBTreeNode>
-// {
-//   public:
-//     EventIdBTreeNode *Allocate() override
-//     {
-//         return nullptr;
-//     }
-// };
-
-struct EventStreamIndexNode// : public BTreeNode<EventStreamIndexNode>
-{
-    EventStreamIndexNode *Left;
-    EventStreamIndexNode *Right;
-    EventStreamIndexNode *Next;
-    EventStreamIndexNode *NextInStream;
-    EventStreamIndexNode *Previous;
-    EventStreamIndexNode *PreviousInStream;
-    sha256_t Hash;
-};
-
-struct Stream// : public BTreeNode<EventStreamIndexNode>
+struct Stream
 {
     Stream *Left;
     Stream *Right;
@@ -81,7 +42,6 @@ class EventStreamIndex
 
     MemoryPool *_memoryPool = nullptr;
     Stream *_streams = nullptr;
-    EventStreamIndexNode *_hej = nullptr;
 };
 
 #endif

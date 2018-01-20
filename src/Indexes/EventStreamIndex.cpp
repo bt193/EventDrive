@@ -102,3 +102,4 @@ void EventStreamIndex::Delete(void *key)
     stream->Version = -1;
     stream->LastAllocation = nullptr;
 }
+

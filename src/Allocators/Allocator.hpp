@@ -12,7 +12,7 @@ class Allocator
 {
   public:
     Allocator();
-    ~Allocator();
+    virtual ~Allocator();
     virtual MemorySegment *Allocate(char *input) = 0;
 
   private:

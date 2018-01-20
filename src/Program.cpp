@@ -7,11 +7,13 @@
 
 void TestEventStreamIndex();
 void TestEventCollisionIndex();
+void TestPositionIndex();
 
 int main(int argc, char *argv[])
 {
     TestEventCollisionIndex();
     TestEventStreamIndex();
+    TestPositionIndex();
     // char buffer[1000];
 
     // bzero(buffer, sizeof(buffer));
@@ -122,7 +124,7 @@ void TestEventStreamIndex()
         printf("* insert existing\n");
         index->Insert(stream1);
         assert(index->Lookup(stream1));
-    }    
+    }
 
     {
         printf("* insert another streamId\n");
@@ -133,4 +135,44 @@ void TestEventStreamIndex()
     }
 
     printf("TestEventStreamIndex... Done!\n");
+}
+
+#include "Indexes/PositionIndex.hpp"
+
+void TestPositionIndex()
+{
+    printf("TestPositionIndex\n");
+    auto random = new Random();
+    auto allocator = new InMemoryAllocator();
+    auto pool = new MemoryPool(allocator);
+    auto index = new PositionIndex(pool);
+
+    position_t position1;
+    position_t position2;
+    position_t position3;
+
+    random->Scramble(position1, sizeof(position_t));
+    random->Scramble(position2, sizeof(position_t));
+    random->Scramble(position3, sizeof(position_t));
+
+    {
+        printf("* insert position\n");
+        index->Insert(position1);
+        assert(index->Lookup(position1));
+        assert(!index->Lookup(position2));
+    }
+
+    {
+        printf("* scramble\n");
+        random->Scramble(position1, sizeof(position_t));
+        assert(!index->Lookup(position1));
+    }
+
+    {
+        printf("* print\n");
+        index->Insert(position2);
+        index->Insert(position3);
+    }
+
+    printf("TestPositionIndex... Done!\n");
 }
