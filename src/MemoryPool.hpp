@@ -9,6 +9,7 @@ class MemoryPool
     ~MemoryPool();
     char *Allocate(int length);
     char *AllocateBlock(char *ptr, int length);
+    MemorySegment *NextSegment();
 
   private:
     MemoryPool() = default;
@@ -17,9 +18,9 @@ class MemoryPool
     MemoryPool &operator=(MemoryPool &&) = default;
     MemoryPool &operator=(const MemoryPool &) = default;
     MemorySegment *CurrentSegment();
-    MemorySegment *NextSegment();
     MemorySegment *_currentSegment = nullptr;
     Allocator *_allocator;
+    int _segments = 0;
 };
 
 #endif

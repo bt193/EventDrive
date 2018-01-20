@@ -10,3 +10,7 @@ enum ExpectedVersion
     NoStream = -2, // No Events
     EmptyStream = -3 // Has Never Existed
 };
+
+typedef char sha256_t[32];
+typedef char eventid_t[16];
+typedef sha256_t position_t;

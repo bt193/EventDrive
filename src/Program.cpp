@@ -9,25 +9,36 @@ void TestEventStreamIndex();
 void TestEventCollisionIndex();
 void TestPositionIndex();
 
+#include <stdlib.h>
+
 int main(int argc, char *argv[])
 {
+//  char fn[] = "/tmp/fileXXXXXX";
+//  int fd = mkstemp("/tmp/fileXXXXXX");
+//  printf("fd: %d\n", fd);
+//  return 0;
+
+#if false
     TestEventCollisionIndex();
     TestEventStreamIndex();
     TestPositionIndex();
-    // char buffer[1000];
+#else
+    char buffer[1000];
 
-    // bzero(buffer, sizeof(buffer));
+    bzero(buffer, sizeof(buffer));
+    EventStore eventStore;
 
-    // EventStore eventStore;
+    eventStore.Initialize();
 
-    // eventStore.Initialize();
+    for (auto i = 0; i < 3; ++i)
+    {
+        eventStore.Put(buffer, sizeof(buffer));
+    }
+    printf("Waiting...\n");
+    //getchar();
+#endif
+    printf("Done!\n");
 
-    // for (auto i = 0; i < 1; ++i)
-    // {
-    //     eventStore.Put(buffer, sizeof(buffer));
-    // }
-
-    //scanf(buffer);
     return 0;
 }
 
@@ -42,7 +53,7 @@ void TestEventCollisionIndex()
     auto random = new Random();
     auto allocator = new InMemoryAllocator();
     auto pool = new MemoryPool(allocator);
-    auto index = new EventCollisionIndex(pool);
+    auto index = new EventCollisionIndex();
     eventid_t id1, id2, id3;
 
     random->Scramble((char *)&id1, sizeof(eventid_t));
@@ -56,19 +67,19 @@ void TestEventCollisionIndex()
 
     {
         printf("* exists after insert\n");
-        index->Insert(id1);
+        index->Insert(id1, pool);
 
         assert(index->Exists(id1));
     }
 
     {
         printf("* insert existing\n");
-        index->Insert(id1);
+        index->Insert(id1, pool);
     }
 
     {
         printf("* insert another\n");
-        index->Insert(id2);
+        index->Insert(id2, pool);
 
         assert(index->Exists(id1));
         assert(index->Exists(id2));

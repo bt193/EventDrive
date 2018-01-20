@@ -1,5 +1,5 @@
-
 #include "MemoryPool.hpp"
+#include <stdio.h>
 
 MemoryPool::MemoryPool(Allocator *allocator)
 {
@@ -48,5 +48,9 @@ MemorySegment *MemoryPool::CurrentSegment()
 
 MemorySegment *MemoryPool::NextSegment()
 {
-    return _currentSegment = _allocator->Allocate("");
+    char buffer[4096];
+    ++_segments;
+
+    snprintf(buffer, sizeof(buffer), "Index/Default/Chunk#%08x.data", _segments);
+    return _currentSegment = _allocator->Allocate(buffer);
 }

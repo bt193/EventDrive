@@ -1,5 +1,6 @@
 #ifndef __EVENTSTORE_HPP__
 #define __EVENTSTORE_HPP__
+#include "Config.hpp"
 
 class Index;
 

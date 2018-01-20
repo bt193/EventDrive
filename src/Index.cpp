@@ -1,16 +1,20 @@
 #include "Index.hpp"
 #include "Allocators/Allocator.hpp"
+#include "MemoryPool.hpp"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
-Index::Index(Allocator *dataAllocator, Allocator *metadataAllocator)
+Index::Index(MemoryPool *dataMemoryPool, PositionIndex *positionIndex, EventStreamIndex *eventStreamIndex)
 {
-    _dataAllocator = dataAllocator;
-    _metadataAllocator = metadataAllocator;
+    _positionIndex = positionIndex;
+    _eventStreamIndex = eventStreamIndex;
+    _dataMemoryPool = dataMemoryPool;
     mkdir("Index", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     mkdir("Index/Default", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    sha256_init(&_sha256Context);
 }
 
 Index::~Index()
@@ -24,12 +28,29 @@ void Index::Scan()
     printf("Scan done!\n");
 }
 
+char *Hex(char *buffer, char *memory, int length)
+{
+    int offset = 0;
+    const char *table = "0123456789ABCDEF";
+
+    for (int i = 0; i < length; ++i)
+    {
+        buffer[offset++] = table[(memory[i] >> 4) & 0xF];
+        buffer[offset++] = table[memory[i] & 0xF];
+    }
+    buffer[offset] = '\0';
+
+    return buffer;
+}
+
 void Index::LoadData()
 {
     struct stat statbuf;
     char filename[512];
+    char hash[512];
+    char hash2[512];
 
-    for (auto i = 0;; ++i)
+    for (auto i = 1;; ++i)
     {
         snprintf(filename, sizeof(filename), "Index/Default/Chunk#%08x.data", i);
 
@@ -39,7 +60,8 @@ void Index::LoadData()
         }
 
         printf("Scanning: %s\n", filename);
-        auto segment = _dataAllocator->Allocate(filename);
+
+        auto segment = _dataMemoryPool->NextSegment();
 
         while (char *mem = segment->Peek(sizeof(int)))
         {
@@ -57,6 +79,17 @@ void Index::LoadData()
             }
             else if (op > 0)
             {
+                sha256_t check;
+                char *hashAddr = mem + op - sizeof(sha256_t);
+
+                sha256_update(&_sha256Context, (const BYTE *)mem, op - sizeof(sha256_t));
+                sha256_final(&_sha256Context, (BYTE *)check);
+
+                if (memcmp(check, hashAddr, sizeof(sha256_t)))
+                {
+                    printf("Hash: %s vs. %s\n", Hex(hash, hashAddr, sizeof(sha256_t)), Hex(hash2, check, sizeof(sha256_t)));
+                    assert(!"Invalid hash!");
+                }
                 //printf("Skip: %d\n", op);
                 segment->Skip(op);
             }
@@ -78,53 +111,56 @@ void Index::LoadData()
 
 void Index::Put(char *memory, int length)
 {
-    char *addr;
+    BeginTransaction();
+    InjectData(memory, length);
+    CommitTransaction();
+}
 
-    if (!CurrentSegment()->BeginTransaction())
-    {
-        AddSegment()->BeginTransaction();
-    }
+void Index::InjectData(char *memory, int length)
+{
+    int len = sizeof(int) + length + sizeof(sha256_t);
+    char *addr = _dataMemoryPool->Allocate(len);
 
-    if (!(addr = CurrentSegment()->Peek(length + sizeof(int))))
-    {
-        AddSegment();
-        addr = CurrentSegment()->Peek(length + sizeof(int));
-    }
-
-    *(int *) addr = length + sizeof(int);
+    *(int *)addr = len;
     memcpy(addr + sizeof(int), memory, length);
-    CurrentSegment()->Skip(length + sizeof(int));
+    sha256_update(&_sha256Context, (const BYTE *)addr, sizeof(int) + length);
+    sha256_final(&_sha256Context, (BYTE *)addr + sizeof(int) + length);
 
-
-    if (!CurrentSegment()->Commit())
-    {
-        AddSegment()->Commit();
-    }
-
-    // std::vector<MemorySegment *> scope;
-    // for (auto x : scope)
-    // {
-    // }
+    _eventStreamIndex->Insert(((Event *) memory)->EventId);
 }
 
-MemorySegment *Index::CurrentSegment()
+void Index::BeginTransaction()
 {
-    if (!_currentSegment)
-    {
-        AddSegment();
-    }
-    return _currentSegment;
+    int *ptr = (int *)_dataMemoryPool->Allocate(sizeof(OpCode));
+
+    *ptr = OpCode::BeginTransaction;
 }
 
-MemorySegment *Index::AddSegment()
+void Index::CommitTransaction()
 {
-    char filename[512];
-    int index = _chunks.size();
+    int *ptr = (int *)_dataMemoryPool->Allocate(sizeof(OpCode));
 
-    snprintf(filename, sizeof(filename), "Index/Default/Chunk#%08x.data", index);
-    auto segment = _dataAllocator->Allocate(filename);
-
-    _chunks.push_back(segment);
-    _currentSegment = segment;
-    return segment;
+    *ptr = OpCode::Commit;
 }
+
+// MemorySegment *Index::CurrentSegment()
+// {
+//     if (!_currentSegment)
+//     {
+//         AddSegment();
+//     }
+//     return _currentSegment;
+// }
+
+// MemorySegment *Index::AddSegment()
+// {
+//     // char filename[512];
+//     // int index = _chunks.size();
+
+//     // snprintf(filename, sizeof(filename), "Index/Default/Chunk#%08x.data", index);
+//     // auto segment = _dataAllocator->Allocate(filename);
+
+//     // _chunks.push_back(segment);
+//     // _currentSegment = segment;
+//     //return segment;
+// }

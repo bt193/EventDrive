@@ -14,9 +14,9 @@ struct EventIdCollisionIndexNode
 class EventCollisionIndex
 {
   public:
-    EventCollisionIndex(MemoryPool *memoryPool);
+    EventCollisionIndex();
     ~EventCollisionIndex();
-    void Insert(eventid_t id);
+    void Insert(eventid_t id, MemoryPool *memoryPool);
     bool Exists(eventid_t id);
 
   private:
@@ -25,8 +25,7 @@ class EventCollisionIndex
     EventCollisionIndex &operator=(EventCollisionIndex &&) = default;
     EventCollisionIndex &operator=(const EventCollisionIndex &) = default;
     bool Exists(EventIdCollisionIndexNode *node, eventid_t id);
-    void Insert(EventIdCollisionIndexNode **node, eventid_t id);
-    MemoryPool *_memoryPool; // maybe?
+    void Insert(EventIdCollisionIndexNode **node, eventid_t id, MemoryPool *memoryPool);
     EventIdCollisionIndexNode *_root = nullptr;
     char *_pagePointer = nullptr;
 };

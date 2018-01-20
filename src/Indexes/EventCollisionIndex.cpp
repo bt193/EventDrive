@@ -1,18 +1,17 @@
 #include "EventCollisionIndex.hpp"
 #include <string.h>
 
-EventCollisionIndex::EventCollisionIndex(MemoryPool *memoryPool)
+EventCollisionIndex::EventCollisionIndex()
 {
-    _memoryPool = memoryPool;
 }
 
 EventCollisionIndex::~EventCollisionIndex()
 {
 }
 
-void EventCollisionIndex::Insert(eventid_t id)
+void EventCollisionIndex::Insert(eventid_t id, MemoryPool *memoryPool)
 {
-    Insert(&_root, id);
+    Insert(&_root, id, memoryPool);
 }
 
 bool EventCollisionIndex::Exists(eventid_t id)
@@ -42,17 +41,17 @@ bool EventCollisionIndex::Exists(EventIdCollisionIndexNode *node, eventid_t id)
     return false;
 }
 
-void EventCollisionIndex::Insert(EventIdCollisionIndexNode **node, eventid_t id)
+void EventCollisionIndex::Insert(EventIdCollisionIndexNode **node, eventid_t id, MemoryPool *memoryPool)
 {
     if (*node == nullptr)
     {
-        auto *new_node = (EventIdCollisionIndexNode *)_memoryPool->AllocateBlock(_pagePointer, sizeof(EventIdCollisionIndexNode));
+        auto *new_node = (EventIdCollisionIndexNode *)memoryPool->AllocateBlock(_pagePointer, sizeof(EventIdCollisionIndexNode));
 
         memcpy(new_node->EventId, id, sizeof(eventid_t));
         new_node->Left = nullptr;
         new_node->Right = nullptr;
         *node = new_node;
-        _pagePointer = (char *) new_node;
+        _pagePointer = (char *)new_node;
         return;
     }
 
@@ -60,10 +59,10 @@ void EventCollisionIndex::Insert(EventIdCollisionIndexNode **node, eventid_t id)
 
     if (result > 0)
     {
-        Insert(&(*node)->Right, id);
+        Insert(&(*node)->Right, id, memoryPool);
     }
     else if (result < 0)
     {
-        Insert(&(*node)->Left, id);
+        Insert(&(*node)->Left, id, memoryPool);
     }
 }
