@@ -9,7 +9,7 @@ PositionIndex::PositionIndex(MemoryPool *memoryPool)
     position_t start;
     position_t end;
 
-    memset(start, 0, sizeof(position_t));
+    memset(start, 0x00, sizeof(position_t));
     memset(end, 0xff, sizeof(position_t));
 
     _first = Insert(start);
@@ -59,7 +59,7 @@ EventStreamIndexNode *PositionIndex::Insert(EventStreamIndexNode **node, positio
 {
     if (*node == nullptr)
     {
-        EventStreamIndexNode *new_node = (EventStreamIndexNode *)_memoryPool->AllocateBlock(nullptr, sizeof(EventStreamIndexNode));
+        EventStreamIndexNode *new_node = (EventStreamIndexNode *)_memoryPool->Allocate(sizeof(EventStreamIndexNode));
 
         new_node->Left = nullptr;
         new_node->Right = nullptr;

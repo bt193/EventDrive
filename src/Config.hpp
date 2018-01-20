@@ -1,3 +1,6 @@
+#ifndef __CONFIG_HPP
+#define __CONFIG_HPP
+
 enum Direction
 {
     Forward,
@@ -14,3 +17,6 @@ enum ExpectedVersion
 typedef char sha256_t[32];
 typedef char eventid_t[16];
 typedef sha256_t position_t;
+
+#endif
+

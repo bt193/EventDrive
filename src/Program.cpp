@@ -4,20 +4,31 @@
 #include <string.h>
 
 #include "BTree.hpp"
+#include "Random.hpp"
+
+class Event;
 
 void TestEventStreamIndex();
 void TestEventCollisionIndex();
 void TestPositionIndex();
+int CreateEvent(char *buffer, int len, eventid_t eventId, char *streamId, int version, char *metadata, char *payload, char *eventType);
 
 #include <stdlib.h>
+#include "Index.hpp"
+#include "Config.hpp"
 
 int main(int argc, char *argv[])
 {
-//  char fn[] = "/tmp/fileXXXXXX";
-//  int fd = mkstemp("/tmp/fileXXXXXX");
-//  printf("fd: %d\n", fd);
-//  return 0;
+    auto random = new Random();
+    eventid_t eventId1;
+    eventid_t eventId2;
+    eventid_t eventId3;
 
+    random->Scramble(eventId1, sizeof(position_t));
+    random->Scramble(eventId2, sizeof(position_t));
+    random->Scramble(eventId3, sizeof(position_t));
+    // CreateEvent(eventId, "player/adam", 0, "{}", "{}", "ESPlus.SuperEvent");
+    // return 0;
 #if false
     TestEventCollisionIndex();
     TestEventStreamIndex();
@@ -30,10 +41,19 @@ int main(int argc, char *argv[])
 
     eventStore.Initialize();
 
-    for (auto i = 0; i < 3; ++i)
-    {
-        eventStore.Put(buffer, sizeof(buffer));
-    }
+    int len;
+
+
+    len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", 0, "{}", "{}", "ESPlus.SuperEvent");
+    eventStore.Put(buffer + sizeof(int), len - sizeof(int) - sizeof(sha256_t));
+
+    len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", 0, "{}", "{}", "ESPlus.SuperEvent");
+    eventStore.Put(buffer + sizeof(int), len - sizeof(int) - sizeof(sha256_t));
+    // for (auto i = 0; i < 3; ++i)
+    // {
+    //     eventStore.Put(buffer + sizeof(int), len - sizeof(int) - sizeof(sha256_t));
+    // }
+
     printf("Waiting...\n");
     //getchar();
 #endif
@@ -44,7 +64,6 @@ int main(int argc, char *argv[])
 
 #include "Indexes/EventCollisionIndex.hpp"
 #include "Allocators/InMemoryAllocator.hpp"
-#include "Random.hpp"
 #include <assert.h>
 
 void TestEventCollisionIndex()
@@ -187,3 +206,65 @@ void TestPositionIndex()
 
     printf("TestPositionIndex... Done!\n");
 }
+
+int CreateEvent(char *buffer, int len, eventid_t eventId, char *streamId, int version, char *metadata, char *payload, char *eventType)
+{
+    int length =
+        0 + sizeof(int)                   // Length
+        + sizeof(version)                 // Version
+        + sizeof(eventid_t)               // EventId
+        + strlen(eventType) + sizeof(int) //
+        + strlen(streamId) + sizeof(int)  //
+        + strlen(metadata) + sizeof(int)  //
+        + strlen(payload) + sizeof(int)   //
+        + sizeof(sha256_t);
+
+    if (length > len)
+    {
+        return -1;
+    }
+
+    auto event = (Event *)buffer;
+
+    event->Length = length;
+    event->Version = version;
+    memcpy(event->EventId, eventId, sizeof(eventid_t));
+
+    char *addr = event->Data;
+    int offset = 0;
+
+    // EventType
+    *(int *)&addr[offset] = strlen(eventType);
+    offset += 4;
+    memcpy(&addr[offset], eventType, strlen(eventType));
+    offset += strlen(eventType);
+
+    // StreamId
+    *(int *)&addr[offset] = strlen(streamId);
+    offset += 4;
+    memcpy(&addr[offset], streamId, strlen(streamId));
+    offset += strlen(streamId);
+
+    // Metadata
+    *(int *)&addr[offset] = strlen(metadata);
+    offset += 4;
+    memcpy(&addr[offset], metadata, strlen(metadata));
+    offset += strlen(metadata);
+
+    // Payload
+    *(int *)&addr[offset] = strlen(payload);
+    offset += 4;
+    memcpy(&addr[offset], payload, strlen(payload));
+    offset += strlen(payload);
+    bzero(&addr[offset], sizeof(sha256_t));
+
+    return length;
+}
+
+// struct Event
+// {
+//   int Length;
+//   int Version;
+//   eventid_t EventId;
+//   char Data[];
+// };

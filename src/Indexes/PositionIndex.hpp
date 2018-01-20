@@ -4,10 +4,9 @@
 typedef char sha256_t[32];
 typedef char eventid_t[16];
 typedef sha256_t position_t;
-class Fragment;
-class MemoryPool;
 
-#include <stdio.h>
+class MemoryPool;
+class Event;
 
 struct EventStreamIndexNode
 {
@@ -17,8 +16,8 @@ struct EventStreamIndexNode
   EventStreamIndexNode *NextInStream;
   EventStreamIndexNode *Previous;
   EventStreamIndexNode *PreviousInStream;
+  Event *Fragment;
   sha256_t Hash;
-  Fragment *Fragment;
 };
 
 class PositionIndex

@@ -57,7 +57,7 @@ Stream *EventStreamIndex::Insert(Stream **node, void *id)
     if (*node == nullptr)
     {
         int length = *(int *)id + sizeof(int);
-        auto *new_node = (Stream *)_memoryPool->AllocateBlock(nullptr, sizeof(Stream) + length);
+        auto *new_node = (Stream *)_memoryPool->Allocate(sizeof(Stream) + length);
 
         memcpy(new_node->Name, id, length);
         new_node->Left = nullptr;

@@ -13,10 +13,6 @@ struct Event
   int Length;
   int Version;
   eventid_t EventId;
-  int StreamIdPosition;
-  int MetadataPosition;
-  int PayloadPosition;
-  int EventTypePosition;
   char Data[];
 };
 

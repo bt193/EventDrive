@@ -1,6 +1,7 @@
 #include "Index.hpp"
 #include "Allocators/Allocator.hpp"
 #include "MemoryPool.hpp"
+#include "Config.hpp"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdio.h>
@@ -66,7 +67,7 @@ void Index::LoadData()
         while (char *mem = segment->Peek(sizeof(int)))
         {
             int op = *(int *)mem;
-            printf("Scanning, op: %d\n", op);
+            //printf("Scanning, op: %d\n", op);
             if (op == OpCode::BeginTransaction)
             {
                 //printf("BeginTransaction\n");
@@ -85,11 +86,16 @@ void Index::LoadData()
                 sha256_update(&_sha256Context, (const BYTE *)mem, op - sizeof(sha256_t));
                 sha256_final(&_sha256Context, (BYTE *)check);
 
+                // printf("Hash: %s\n", Hex(hash, hashAddr, sizeof(sha256_t)));
                 if (memcmp(check, hashAddr, sizeof(sha256_t)))
                 {
                     printf("Hash: %s vs. %s\n", Hex(hash, hashAddr, sizeof(sha256_t)), Hex(hash2, check, sizeof(sha256_t)));
                     assert(!"Invalid hash!");
                 }
+
+                //_eventStreamIndex->Insert(((Event *) mem)->EventId);
+                _positionIndex->Insert(hashAddr);
+
                 //printf("Skip: %d\n", op);
                 segment->Skip(op);
             }
@@ -111,6 +117,52 @@ void Index::LoadData()
 
 void Index::Put(char *memory, int length)
 {
+    Event *event = (Event *)memory;
+    char *ptr = event->Data + *(int *)&event->Data;
+
+    auto stream = _eventStreamIndex->Lookup(ptr);
+
+    if (event->Version >= 0)
+    {
+        if (stream)
+        {
+            if (stream->Version + 1 != event->Version)
+            {
+                printf("Expected version: %d, got: %d\n", stream->Version + 1, event->Version);
+                return;
+            }
+        }
+        else if (event->Version != 0)
+        {
+            printf("Expected version: 0\n");
+            return;
+        }
+    }
+    else if (event->Version == ExpectedVersion::EmptyStream)
+    {
+        if (!stream)
+        {
+            printf("Stream does not exists\n");
+            return;
+        }
+        else if (stream->Version != -1)
+        {
+            printf("Stream is not empty\n");
+            return;
+        }
+    }
+    else if (event->Version == ExpectedVersion::NoStream)
+    {
+        if (stream)
+        {
+            printf("Stream exists\n");
+            return;
+        }
+    }
+    // else if (event->Version == ExpectedVersion::Any)
+    // {
+    // }
+
     BeginTransaction();
     InjectData(memory, length);
     CommitTransaction();
@@ -126,7 +178,8 @@ void Index::InjectData(char *memory, int length)
     sha256_update(&_sha256Context, (const BYTE *)addr, sizeof(int) + length);
     sha256_final(&_sha256Context, (BYTE *)addr + sizeof(int) + length);
 
-    _eventStreamIndex->Insert(((Event *) memory)->EventId);
+    //_eventStreamIndex->Insert(((Event *) memory)->EventId);
+    _positionIndex->Insert(addr + sizeof(int) + length);
 }
 
 void Index::BeginTransaction()
@@ -142,25 +195,3 @@ void Index::CommitTransaction()
 
     *ptr = OpCode::Commit;
 }
-
-// MemorySegment *Index::CurrentSegment()
-// {
-//     if (!_currentSegment)
-//     {
-//         AddSegment();
-//     }
-//     return _currentSegment;
-// }
-
-// MemorySegment *Index::AddSegment()
-// {
-//     // char filename[512];
-//     // int index = _chunks.size();
-
-//     // snprintf(filename, sizeof(filename), "Index/Default/Chunk#%08x.data", index);
-//     // auto segment = _dataAllocator->Allocate(filename);
-
-//     // _chunks.push_back(segment);
-//     // _currentSegment = segment;
-//     //return segment;
-// }
