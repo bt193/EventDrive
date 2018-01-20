@@ -14,7 +14,7 @@ struct EventIdCollisionIndexNode
 class EventCollisionIndex
 {
   public:
-    EventCollisionIndex();
+    EventCollisionIndex(MemoryPool *memoryPool);
     ~EventCollisionIndex();
     void Insert(eventid_t id);
     bool Exists(eventid_t id);

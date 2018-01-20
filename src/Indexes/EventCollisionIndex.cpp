@@ -1,8 +1,9 @@
 #include "EventCollisionIndex.hpp"
 #include <string.h>
 
-EventCollisionIndex::EventCollisionIndex()
+EventCollisionIndex::EventCollisionIndex(MemoryPool *memoryPool)
 {
+    _memoryPool = memoryPool;
 }
 
 EventCollisionIndex::~EventCollisionIndex()
@@ -11,7 +12,7 @@ EventCollisionIndex::~EventCollisionIndex()
 
 void EventCollisionIndex::Insert(eventid_t id)
 {
-    //Insert(&_root, id);
+    Insert(&_root, id);
 }
 
 bool EventCollisionIndex::Exists(eventid_t id)
@@ -23,7 +24,7 @@ bool EventCollisionIndex::Exists(EventIdCollisionIndexNode *node, eventid_t id)
 {
     while (node && node->EventId)
     {
-        int result = !memcmp(id, node->EventId, sizeof(eventid_t));
+        int result = memcmp(id, node->EventId, sizeof(eventid_t));
 
         if (result == 0)
         {
@@ -55,7 +56,7 @@ void EventCollisionIndex::Insert(EventIdCollisionIndexNode **node, eventid_t id)
         return;
     }
 
-    int result = !memcmp(id, (*node)->EventId, sizeof(eventid_t));
+    int result = memcmp(id, (*node)->EventId, sizeof(eventid_t));
 
     if (result > 0)
     {
