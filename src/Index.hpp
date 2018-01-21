@@ -4,6 +4,7 @@
 #include "Indexes/PositionIndex.hpp"
 #include "Indexes/EventStreamIndex.hpp"
 #include "Crypto/sha256.h"
+#include "Config.hpp"
 #include <stdio.h>
 
 class Allocator;
@@ -62,8 +63,8 @@ private:
   Index &operator=(Index &&) = default;
   Index &operator=(const Index &) = default;
 
-  void BeginTransaction();
-  void CommitTransaction();
+  void BeginTransaction(int token);
+  void CommitTransaction(int token);
   void LoadData();
   void IndexEvent(Event *event);
   bool IsPure(char *memory, int length, int events);
@@ -71,6 +72,7 @@ private:
   bool AcceptVersion(Event *event);
   int CompareFixedString(FixedString *str1, FixedString *str2);
   bool PersistData(char *memory, int length, int events);
+  void PutTransaction(OpCode instruction, int token);
   std::vector<MemorySegment *> _chunks;
   MemorySegment *_currentSegment = nullptr;
 

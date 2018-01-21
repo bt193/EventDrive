@@ -78,12 +78,12 @@ void Index::LoadData()
             if (op == OpCode::BeginTransaction)
             {
                 //printf("BeginTransaction\n");
-                segment->Skip(sizeof(int));
+                segment->Skip(sizeof(int)*2);
             }
             else if (op == OpCode::Commit)
             {
                 //printf("Commit\n");
-                segment->Skip(sizeof(int));
+                segment->Skip(sizeof(int)*2);
             }
             else if (op > 0)
             {
@@ -91,8 +91,8 @@ void Index::LoadData()
                 sha256_t check;
                 char *hashAddr = event->Hash();
 
-                sha256_update(&_sha256Context, (const BYTE *) event->Hash(), event->Length - sizeof(sha256_t));
-                sha256_final(&_sha256Context, (BYTE *)check);
+                // sha256_update(&_sha256Context, (const BYTE *) event->Hash(), event->Length - sizeof(sha256_t));
+                // sha256_final(&_sha256Context, (BYTE *)check);
 
                 // printf("Hash: %s\n", Hex(hash, hashAddr, sizeof(sha256_t)));
                 // if (memcmp(check, hashAddr, sizeof(sha256_t)))
@@ -194,7 +194,7 @@ int Index::CompareFixedString(FixedString *str1, FixedString *str2)
 void Index::Put(char *memory, int length, int events)
 {
     bool withTransaction = events > 1;
-    int token = 0xdeadbeef;
+    int token = *(int *) _sha256Context.state;
 
     if (!IsPure(memory, length, events))
     {
@@ -219,7 +219,7 @@ void Index::Put(char *memory, int length, int events)
 
     if (withTransaction)
     {
-        BeginTransaction();
+        BeginTransaction(token);
     }
 
     {
@@ -236,7 +236,7 @@ void Index::Put(char *memory, int length, int events)
 
     if (withTransaction)
     {
-        CommitTransaction();
+        CommitTransaction(token);
     }
 }
 
@@ -251,8 +251,8 @@ bool Index::PersistData(char *memory, int length, int events)
         memcpy(dest, source, source->Length);
         dest->Length = len;
 
-        sha256_update(&_sha256Context, (const BYTE *)dest, source->Length);
-        sha256_final(&_sha256Context, (BYTE *)dest->Hash());
+        // sha256_update(&_sha256Context, (const BYTE *)dest, source->Length);
+        // sha256_final(&_sha256Context, (BYTE *)dest->Hash());
 
         IndexEvent(dest);
         ++_eventCount;
@@ -280,16 +280,26 @@ void Index::IndexEvent(Event *event)
     }
 }
 
-void Index::BeginTransaction()
+struct Transaction
 {
-    int *ptr = (int *)_dataMemoryPool->Allocate(sizeof(OpCode));
+    int Instruction;
+    int Token;
+};
 
-    *ptr = OpCode::BeginTransaction;
+void Index::BeginTransaction(int token)
+{
+    PutTransaction(OpCode::BeginTransaction, token);
 }
 
-void Index::CommitTransaction()
+void Index::CommitTransaction(int token)
 {
-    int *ptr = (int *)_dataMemoryPool->Allocate(sizeof(OpCode));
+    PutTransaction(OpCode::Commit, token);
+}
 
-    *ptr = OpCode::Commit;
+void Index::PutTransaction(OpCode instruction, int token)
+{
+    auto *payload = (Transaction *)_dataMemoryPool->Allocate(sizeof(Transaction));
+
+    payload->Instruction = instruction;
+    payload->Token = token;
 }

@@ -1,6 +1,6 @@
 #include "MemorySegment.hpp"
 #include <string.h>
-
+#include "Config.hpp"
 #include <stdio.h>
 
 MemorySegment::MemorySegment(char *memory, int length, int fullLength)
