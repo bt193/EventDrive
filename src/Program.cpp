@@ -19,14 +19,18 @@ int CreateEvent(char *buffer, int len, eventid_t eventId, char *streamId, int ve
 
 int main(int argc, char *argv[])
 {
-    auto random = new Random();
+    Random random;
     eventid_t eventId1;
     eventid_t eventId2;
     eventid_t eventId3;
 
-    random->Scramble(eventId1, sizeof(position_t));
-    random->Scramble(eventId2, sizeof(position_t));
-    random->Scramble(eventId3, sizeof(position_t));
+    random.Scramble(eventId1, sizeof(eventid_t));
+    random.Scramble(eventId2, sizeof(eventid_t));
+    random.Scramble(eventId3, sizeof(eventid_t));
+
+    // bzero(eventId1, sizeof(eventid_t));
+    // bzero(eventId2, sizeof(eventid_t));
+    // bzero(eventId3, sizeof(eventid_t));
     // CreateEvent(eventId, "player/adam", 0, "{}", "{}", "ESPlus.SuperEvent");
     // return 0;
 #if false
@@ -34,7 +38,7 @@ int main(int argc, char *argv[])
     TestEventStreamIndex();
     TestPositionIndex();
 #else
-    char buffer[1000];
+    char buffer[4096];
 
     bzero(buffer, sizeof(buffer));
     EventStore eventStore;
@@ -43,12 +47,13 @@ int main(int argc, char *argv[])
 
     int len;
 
+    len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", ExpectedVersion::Any, "{}", "{}", "ESPlus.SuperEvent");
+    eventStore.Put(buffer, len - sizeof(sha256_t));
+    //len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", 1, "{}", "{}", "ESPlus.SuperEvent");
+    //eventStore.Put(buffer, len - sizeof(sha256_t));
 
-    len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", 0, "{}", "{}", "ESPlus.SuperEvent");
-    eventStore.Put(buffer + sizeof(int), len - sizeof(int) - sizeof(sha256_t));
-
-    len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", 0, "{}", "{}", "ESPlus.SuperEvent");
-    eventStore.Put(buffer + sizeof(int), len - sizeof(int) - sizeof(sha256_t));
+    // len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", 1, "{}", "{}", "ESPlus.SuperEvent");
+    // eventStore.Put(buffer + sizeof(int), len - sizeof(int) - sizeof(sha256_t));
     // for (auto i = 0; i < 3; ++i)
     // {
     //     eventStore.Put(buffer + sizeof(int), len - sizeof(int) - sizeof(sha256_t));

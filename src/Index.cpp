@@ -86,7 +86,7 @@ void Index::LoadData()
                 sha256_update(&_sha256Context, (const BYTE *)mem, op - sizeof(sha256_t));
                 sha256_final(&_sha256Context, (BYTE *)check);
 
-                // printf("Hash: %s\n", Hex(hash, hashAddr, sizeof(sha256_t)));
+                printf("Hash: %s\n", Hex(hash, hashAddr, sizeof(sha256_t)));
                 if (memcmp(check, hashAddr, sizeof(sha256_t)))
                 {
                     printf("Hash: %s vs. %s\n", Hex(hash, hashAddr, sizeof(sha256_t)), Hex(hash2, check, sizeof(sha256_t)));
@@ -118,9 +118,14 @@ void Index::LoadData()
 void Index::Put(char *memory, int length)
 {
     Event *event = (Event *)memory;
-    char *ptr = event->Data + *(int *)&event->Data;
+    char *ptr = event->Data + *(int *)event->Data + sizeof(int);
 
     auto stream = _eventStreamIndex->Lookup(ptr);
+
+    if (stream)
+    {
+        printf("Stream: %p, version: %d\n", stream, stream->Version);
+    }
 
     if (event->Version >= 0)
     {
@@ -134,7 +139,7 @@ void Index::Put(char *memory, int length)
         }
         else if (event->Version != 0)
         {
-            printf("Expected version: 0\n");
+            printf("(!stream) Expected version: 0, got: %d\n", event->Version);
             return;
         }
     }
@@ -159,9 +164,11 @@ void Index::Put(char *memory, int length)
             return;
         }
     }
-    // else if (event->Version == ExpectedVersion::Any)
-    // {
-    // }
+    else if (event->Version == ExpectedVersion::Any)
+    {
+    }
+
+    printf("-- Ok version: %d\n", event->Version);
 
     BeginTransaction();
     InjectData(memory, length);
@@ -178,8 +185,13 @@ void Index::InjectData(char *memory, int length)
     sha256_update(&_sha256Context, (const BYTE *)addr, sizeof(int) + length);
     sha256_final(&_sha256Context, (BYTE *)addr + sizeof(int) + length);
 
-    //_eventStreamIndex->Insert(((Event *) memory)->EventId);
-    _positionIndex->Insert(addr + sizeof(int) + length);
+    auto data = ((Event *)memory)->Data;
+    auto name = data + *(int *)data + sizeof(int);
+
+    auto stream = _eventStreamIndex->Insert(name);
+    auto index = _positionIndex->Insert(addr + sizeof(int) + length);
+
+    stream->Version += 1;
 }
 
 void Index::BeginTransaction()

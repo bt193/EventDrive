@@ -19,5 +19,5 @@ MemorySegment *InMemoryAllocator::Allocate(char *input)
 
     mprotect(memory + ChunkSize, PageSize, PROT_NONE);
 
-    return new MemorySegment(memory, ChunkSize, length);
+    return Register(new MemorySegment(memory, ChunkSize, length));
 }

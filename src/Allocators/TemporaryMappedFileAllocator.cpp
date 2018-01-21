@@ -15,8 +15,8 @@ TemporaryMappedFileAllocator::~TemporaryMappedFileAllocator()
 int TemporaryMappedFileAllocator::GetFd(char *input)
 {
     char buffer[] = "temp.XXXXXX";
-
     auto fd = mkstemp((char *)buffer);
+    
     unlink(buffer);
     return fd;
 }

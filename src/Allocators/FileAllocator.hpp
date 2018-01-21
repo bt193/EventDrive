@@ -19,6 +19,7 @@ private:
   FileAllocator &operator=(const FileAllocator &) = default;
 
   int _fd;
+  char *_memory;
 };
 
 #endif
