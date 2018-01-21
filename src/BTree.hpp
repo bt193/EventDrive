@@ -1,7 +1,7 @@
 #ifndef __BTREE__
 #define __BTREE__
 #include "MemoryPool.hpp"
-
+/*
 template <typename TKey, typename TValue>
 struct BTreeNode
 {
@@ -97,5 +97,5 @@ class BTree
     BTreeNode<TKey, TValue> *_root;
     MemoryPool *_memoryPool;
 };
-
+*/
 #endif

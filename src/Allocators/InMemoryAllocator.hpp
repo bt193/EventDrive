@@ -6,6 +6,7 @@ class InMemoryAllocator : public Allocator
 {
   public:
     InMemoryAllocator();
+    //InMemoryAllocator(void *memory, int length);
     ~InMemoryAllocator();
     MemorySegment *Allocate(char *input);
 

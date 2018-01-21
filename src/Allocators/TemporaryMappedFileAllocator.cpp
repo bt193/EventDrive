@@ -3,20 +3,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 
 TemporaryMappedFileAllocator::TemporaryMappedFileAllocator()
 {
+    strncpy(_buffer, "temp.XXXXXX", sizeof(_buffer));
 }
 
 TemporaryMappedFileAllocator::~TemporaryMappedFileAllocator()
 {
+    // unlink(_buffer);
 }
 
 int TemporaryMappedFileAllocator::GetFd(char *input)
 {
-    char buffer[] = "temp.XXXXXX";
-    auto fd = mkstemp((char *)buffer);
-    
-    unlink(buffer);
+    auto fd = mkstemp(_buffer);
+
+    unlink(_buffer);
     return fd;
 }

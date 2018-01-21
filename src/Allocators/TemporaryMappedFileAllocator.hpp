@@ -16,6 +16,7 @@ private:
   TemporaryMappedFileAllocator(const TemporaryMappedFileAllocator &) = default;
   TemporaryMappedFileAllocator &operator=(TemporaryMappedFileAllocator &&) = default;
   TemporaryMappedFileAllocator &operator=(const TemporaryMappedFileAllocator &) = default;
+  char _buffer[64];
 };
 
 #endif

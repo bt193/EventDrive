@@ -46,9 +46,13 @@ int main(int argc, char *argv[])
     eventStore.Initialize();
 
     int len;
+    random.Scramble(eventId1, sizeof(eventid_t));
+    len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", ExpectedVersion::Any, "{0000000000000000000000000000000000000000000000}", "{}", "ESPlus.SuperEvent");
 
-    len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", ExpectedVersion::Any, "{}", "{}", "ESPlus.SuperEvent");
-    eventStore.Put(buffer, len - sizeof(sha256_t));
+    for (int i = 0; i < 1000000; ++i)
+    {
+        eventStore.Put(buffer, len - sizeof(sha256_t));
+    }
     //len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", 1, "{}", "{}", "ESPlus.SuperEvent");
     //eventStore.Put(buffer, len - sizeof(sha256_t));
 
@@ -215,9 +219,13 @@ void TestPositionIndex()
 int CreateEvent(char *buffer, int len, eventid_t eventId, char *streamId, int version, char *metadata, char *payload, char *eventType)
 {
     int length =
-        0 + sizeof(int)                   // Length
+        0                                 //
+        + sizeof(int)                     // Length
         + sizeof(version)                 // Version
         + sizeof(eventid_t)               // EventId
+        + sizeof(int)                     //StreamIdOffset
+        + sizeof(int)                     //MetadataOffset
+        + sizeof(int)                     //PayloadOffset
         + strlen(eventType) + sizeof(int) //
         + strlen(streamId) + sizeof(int)  //
         + strlen(metadata) + sizeof(int)  //
@@ -245,23 +253,28 @@ int CreateEvent(char *buffer, int len, eventid_t eventId, char *streamId, int ve
     offset += strlen(eventType);
 
     // StreamId
+    event->StreamIdOffset = offset;
     *(int *)&addr[offset] = strlen(streamId);
+    //assert(event->StreamId() == &addr[offset]);
     offset += 4;
     memcpy(&addr[offset], streamId, strlen(streamId));
     offset += strlen(streamId);
 
     // Metadata
+    event->MetadataOffset = offset;
     *(int *)&addr[offset] = strlen(metadata);
     offset += 4;
     memcpy(&addr[offset], metadata, strlen(metadata));
     offset += strlen(metadata);
 
     // Payload
+    event->PayloadOffset = offset;
     *(int *)&addr[offset] = strlen(payload);
     offset += 4;
     memcpy(&addr[offset], payload, strlen(payload));
     offset += strlen(payload);
     bzero(&addr[offset], sizeof(sha256_t));
+
 
     return length;
 }

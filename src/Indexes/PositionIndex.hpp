@@ -44,4 +44,11 @@ private:
   EventStreamIndexNode *_last = nullptr;
 };
 
+/*
+class Context
+{
+  private:
+  std::map<void *, void *> _translationMatrix;
+};
+*/
 #endif

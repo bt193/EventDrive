@@ -50,6 +50,7 @@ void Index::LoadData()
     char filename[512];
     char hash[512];
     char hash2[512];
+    int events = 0;
 
     for (auto i = 1;; ++i)
     {
@@ -80,24 +81,26 @@ void Index::LoadData()
             }
             else if (op > 0)
             {
+                Event *event = (Event *)mem;
                 sha256_t check;
-                char *hashAddr = mem + op - sizeof(sha256_t);
+                char *hashAddr = event->Hash();
 
-                sha256_update(&_sha256Context, (const BYTE *)mem, op - sizeof(sha256_t));
-                sha256_final(&_sha256Context, (BYTE *)check);
+                // sha256_update(&_sha256Context, (const BYTE *)mem, op - sizeof(sha256_t));
+                // sha256_final(&_sha256Context, (BYTE *)check);
 
-                printf("Hash: %s\n", Hex(hash, hashAddr, sizeof(sha256_t)));
-                if (memcmp(check, hashAddr, sizeof(sha256_t)))
-                {
-                    printf("Hash: %s vs. %s\n", Hex(hash, hashAddr, sizeof(sha256_t)), Hex(hash2, check, sizeof(sha256_t)));
-                    assert(!"Invalid hash!");
-                }
+                // printf("Hash: %s\n", Hex(hash, hashAddr, sizeof(sha256_t)));
+                // if (memcmp(check, hashAddr, sizeof(sha256_t)))
+                // {
+                //     printf("Hash: %s vs. %s\n", Hex(hash, hashAddr, sizeof(sha256_t)), Hex(hash2, check, sizeof(sha256_t)));
+                //     assert(!"Invalid hash!");
+                // }
 
-                //_eventStreamIndex->Insert(((Event *) mem)->EventId);
+                _eventStreamIndex->Insert(event->StreamId());
                 _positionIndex->Insert(hashAddr);
 
                 //printf("Skip: %d\n", op);
                 segment->Skip(op);
+                ++events;
             }
             else if (op == OpCode::None)
             {
@@ -113,19 +116,19 @@ void Index::LoadData()
         _chunks.push_back(segment);
         _currentSegment = segment;
     }
+    printf("Total events: %d\n", events);
 }
 
 void Index::Put(char *memory, int length)
 {
     Event *event = (Event *)memory;
-    char *ptr = event->Data + *(int *)event->Data + sizeof(int);
-
+    char *ptr = event->StreamId();
     auto stream = _eventStreamIndex->Lookup(ptr);
 
-    if (stream)
-    {
-        printf("Stream: %p, version: %d\n", stream, stream->Version);
-    }
+    // if (stream)
+    // {
+    //     printf("Stream: %p, version: %d\n", stream, stream->Version);
+    // }
 
     if (event->Version >= 0)
     {
@@ -168,7 +171,7 @@ void Index::Put(char *memory, int length)
     {
     }
 
-    printf("-- Ok version: %d\n", event->Version);
+    //printf("-- Ok version: %d\n", event->Version);
 
     BeginTransaction();
     InjectData(memory, length);
@@ -179,16 +182,18 @@ void Index::InjectData(char *memory, int length)
 {
     int len = sizeof(int) + length + sizeof(sha256_t);
     char *addr = _dataMemoryPool->Allocate(len);
+    Event *origin = (Event *)memory;
+    Event *event = (Event *)addr;
 
-    *(int *)addr = len;
-    memcpy(addr + sizeof(int), memory, length);
-    sha256_update(&_sha256Context, (const BYTE *)addr, sizeof(int) + length);
-    sha256_final(&_sha256Context, (BYTE *)addr + sizeof(int) + length);
+    //*(int *)addr = len;
+    memcpy(addr, memory, length);
+    event->Length = len;
 
-    auto data = ((Event *)memory)->Data;
-    auto name = data + *(int *)data + sizeof(int);
+    //printf("Inject %p origin version: %d, version: %d\n", addr, origin->Version, event->Version);
+    //sha256_update(&_sha256Context, (const BYTE *)addr, sizeof(int) + length);
+    //sha256_final(&_sha256Context, (BYTE *)addr + sizeof(int) + length);
 
-    auto stream = _eventStreamIndex->Insert(name);
+    auto stream = _eventStreamIndex->Insert(event->StreamId());
     auto index = _positionIndex->Insert(addr + sizeof(int) + length);
 
     stream->Version += 1;

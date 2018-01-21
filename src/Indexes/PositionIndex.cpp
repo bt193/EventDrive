@@ -55,12 +55,15 @@ EventStreamIndexNode *PositionIndex::Lookup(EventStreamIndexNode *node, position
     return nullptr;
 }
 
+#include <stdio.h>
+
 EventStreamIndexNode *PositionIndex::Insert(EventStreamIndexNode **node, position_t id)
 {
     if (*node == nullptr)
     {
         EventStreamIndexNode *new_node = (EventStreamIndexNode *)_memoryPool->Allocate(sizeof(EventStreamIndexNode));
 
+        //printf("addr: %p\n", new_node);
         new_node->Left = nullptr;
         new_node->Right = nullptr;
         new_node->NextInStream = nullptr;

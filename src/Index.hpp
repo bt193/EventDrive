@@ -4,6 +4,7 @@
 #include "Indexes/PositionIndex.hpp"
 #include "Indexes/EventStreamIndex.hpp"
 #include "Crypto/sha256.h"
+#include <stdio.h>
 
 class Allocator;
 class MemorySegment;
@@ -13,7 +14,36 @@ struct Event
   int Length;
   int Version;
   eventid_t EventId;
+  int StreamIdOffset;
+  int MetadataOffset;
+  int PayloadOffset;
   char Data[];
+
+  char *EventType()
+  {
+    return Data;
+  }
+
+  char *StreamId()
+  {
+    //printf("StreamIdOffset: %d\n", StreamIdOffset);
+    return &Data[StreamIdOffset];
+  }
+
+  char *Metadata()
+  {
+    return &Data[MetadataOffset];
+  }
+
+  char *Payload()
+  {
+    return &Data[PayloadOffset];
+  }
+
+  char *Hash()
+  {
+    return (char *)this + Length - sizeof(sha256_t);
+  }
 };
 
 class Index
