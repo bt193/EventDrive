@@ -1,12 +1,19 @@
 #include "Index.hpp"
 #include "Allocators/Allocator.hpp"
 #include "MemoryPool.hpp"
-#include "Config.hpp"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include "Config.hpp"
+#include <unistd.h>
+
+class Guard
+{
+  public:
+    Guard(void *mem) {}
+};
 
 Index::Index(MemoryPool *dataMemoryPool, PositionIndex *positionIndex, EventStreamIndex *eventStreamIndex)
 {
@@ -116,103 +123,141 @@ void Index::LoadData()
     printf("Total events: %ld\n", _eventCount);
 }
 
+bool Index::IsPure(char *memory, int length, int events)
+{
+    if (events < 1)
+    {
+        return false;
+    }
+
+    int scanedEvents = 0;
+    long offset = 0;
+
+    while (offset + sizeof(int) < length)
+    {
+        auto event = (Event *)&memory[offset];
+        scanedEvents += 1;
+
+        offset += event->Length;
+    }
+
+    // printf("events: %d vs. %d\n", events, scanedEvents);
+    // printf("offset: %ld vs. %d\n", offset, length);
+    return events == scanedEvents && offset == length;
+}
+
+bool Index::BelongToSameStreamId(char *memory, int length, int events)
+{
+    auto firstEvent = (Event *)memory;
+    auto firstStream = firstEvent->StreamId();
+
+    for (long offset = firstEvent->Length; offset + sizeof(int) < length;)
+    {
+        auto event = (Event *)&memory[offset];
+
+        if (CompareFixedString((FixedString *)firstStream, (FixedString *)event->StreamId()))
+        {
+            return false;
+        }
+        offset += event->Length;
+    }
+
+    return true;
+}
+
+bool Index::AcceptVersion(Event *event)
+{
+    if (event->Version == ExpectedVersion::Any)
+    {
+        return true;
+    }
+
+    auto stream = _eventStreamIndex->Lookup(event->StreamId());
+
+    if (event->Version == ExpectedVersion::NoStream)
+    {
+        return stream == nullptr;
+    }
+    else if (event->Version == ExpectedVersion::EmptyStream)
+    {
+        return stream && stream->Version == -1;
+    }
+
+    return event->Version == stream->Version + 1;
+}
+
+int Index::CompareFixedString(FixedString *str1, FixedString *str2)
+{
+    return memcmp(str1, str2, str1->Length + sizeof(int));
+}
+
 void Index::Put(char *memory, int length, int events)
 {
     bool withTransaction = events > 1;
     int token = 0xdeadbeef;
+
+    if (!IsPure(memory, length, events))
+    {
+        printf("Unpure data\n");
+        _exit(-1);
+        return;
+    }
+
+    if (!BelongToSameStreamId(memory, length, events))
+    {
+        printf("BelongToSameStreamId\n");
+        _exit(-1);
+        return;
+    }
+
+    if (!AcceptVersion((Event *)memory))
+    {
+        printf("AcceptVersion\n");
+        _exit(-1);
+        return;
+    }
 
     if (withTransaction)
     {
         BeginTransaction();
     }
 
+    {
+        Guard guard(_writeLock);
+
+        if (!AcceptVersion((Event *)memory))
+        {
+            printf("AcceptVersion\n");
+            _exit(-1);
+            return;
+        }
+        PersistData(memory, length, events);
+    }
 
     if (withTransaction)
     {
         CommitTransaction();
-    }    
-
-    // * Check consistency
-    // * Check version
-    // * Acquire write lock
-    // * Check version (first only)
-    // * Write all
-    // * Relase write lock
-
-    Event *event = (Event *)memory;
-    char *ptr = event->StreamId();
-    auto stream = _eventStreamIndex->Lookup(ptr);
-
-    // if (stream)
-    // {
-    //     printf("Stream: %p, version: %d\n", stream, stream->Version);
-    // }
-
-    if (event->Version >= 0)
-    {
-        if (stream)
-        {
-            if (stream->Version + 1 != event->Version)
-            {
-                printf("Expected version: %d, got: %d\n", stream->Version + 1, event->Version);
-                return;
-            }
-        }
-        else if (event->Version != 0)
-        {
-            printf("(!stream) Expected version: 0, got: %d\n", event->Version);
-            return;
-        }
     }
-    else if (event->Version == ExpectedVersion::EmptyStream)
-    {
-        if (!stream)
-        {
-            printf("Stream does not exists\n");
-            return;
-        }
-        else if (stream->Version != -1)
-        {
-            printf("Stream is not empty\n");
-            return;
-        }
-    }
-    else if (event->Version == ExpectedVersion::NoStream)
-    {
-        if (stream)
-        {
-            printf("Stream exists\n");
-            return;
-        }
-    }
-    else if (event->Version == ExpectedVersion::Any)
-    {
-    }
-
-    //printf("-- Ok version: %d\n", event->Version);
-
-    //
-    InjectData(memory, length);
-    //CommitTransaction();
 }
 
-void Index::InjectData(char *memory, int length)
+bool Index::PersistData(char *memory, int length, int events)
 {
-    int len = sizeof(int) + length + sizeof(sha256_t);
-    char *addr = _dataMemoryPool->Allocate(len);
-    Event *origin = (Event *)memory;
-    Event *event = (Event *)addr;
+    for (long offset = 0; offset + sizeof(int) < length; offset += ((Event *)&memory[offset])->Length)
+    {
+        auto source = (Event *)&memory[offset];
+        int len = sizeof(int) + source->Length + sizeof(sha256_t);
+        auto *dest = (Event *)_dataMemoryPool->Allocate(len);
 
-    //*(int *)addr = len;
-    memcpy(addr, memory, length);
-    event->Length = len;
+        memcpy(dest, source, source->Length);
+        dest->Length = len;
 
-    //printf("Inject %p origin version: %d, version: %d\n", addr, origin->Version, event->Version);
-    //sha256_update(&_sha256Context, (const BYTE *)addr, sizeof(int) + length);
-    //sha256_final(&_sha256Context, (BYTE *)addr + sizeof(int) + length);
-    IndexEvent(event);
+        //sha256_update(&_sha256Context, (const BYTE *)addr, sizeof(int) + length);
+        //sha256_final(&_sha256Context, (BYTE *)addr + sizeof(int) + length);
 
-    ++_eventCount;
+        IndexEvent(dest);
+        ++_eventCount;
+    }
+    return true;
 }
 
 void Index::IndexEvent(Event *event)

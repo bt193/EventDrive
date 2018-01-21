@@ -15,7 +15,7 @@ public:
   ~EventStore();
   void Initialize();
 
-  void Put(char *memory, int length);
+  void Put(char *memory, int length, int events);
 
   int ReadForward(position_t fromPosition, char *buffer, int length, int maxEvents);
   int ReadBackwards(position_t fromPosition, char *buffer, int length, int maxEvents);

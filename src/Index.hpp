@@ -8,6 +8,7 @@
 
 class Allocator;
 class MemorySegment;
+class FixedString;
 
 struct Event
 {
@@ -52,7 +53,7 @@ public:
   Index(MemoryPool *dataMemoryPool, PositionIndex *positionIndex, EventStreamIndex *eventStreamIndex);
   ~Index();
   void Scan();
-  void Put(char *memory, int length, int events = 1);
+  void Put(char *memory, int length, int events);
 
 private:
   Index() = default;
@@ -63,9 +64,13 @@ private:
 
   void BeginTransaction();
   void CommitTransaction();
-  void InjectData(char *memory, int length);
   void LoadData();
   void IndexEvent(Event *event);
+  bool IsPure(char *memory, int length, int events);
+  bool BelongToSameStreamId(char *memory, int length, int events);
+  bool AcceptVersion(Event *event);
+  int CompareFixedString(FixedString *str1, FixedString *str2);
+  bool PersistData(char *memory, int length, int events);
   std::vector<MemorySegment *> _chunks;
   MemorySegment *_currentSegment = nullptr;
 
@@ -74,6 +79,7 @@ private:
   EventStreamIndex *_eventStreamIndex;
   SHA256_CTX _sha256Context;
   long _eventCount = 0;
+  void *_writeLock;
 };
 
 #endif

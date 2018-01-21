@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     TestEventStreamIndex();
     TestPositionIndex();
 #else
-    char buffer[4096];
+    char buffer[40960];
 
     bzero(buffer, sizeof(buffer));
     EventStore eventStore;
@@ -46,11 +46,13 @@ int main(int argc, char *argv[])
 
     int len;
     random.Scramble(eventId1, sizeof(eventid_t));
-    len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", ExpectedVersion::Any, "{0000000000000000000000000000000000000000000000}", "{}", "ESPlus.SuperEvent");
+    auto res1 = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", ExpectedVersion::Any, "{0000000000000000000000000000000000000000000000}", "{}", "ESPlus.SuperEvent");
+    auto res2 = CreateEvent(buffer + res1, sizeof(buffer) - res1, eventId1, "player/1", ExpectedVersion::Any, "{0000000000000000000000000000000000000000000000}", "{}", "ESPlus.SuperEvent");
 
     for (int i = 0; i < 1000000; ++i)
     {
-        eventStore.Put(buffer, len - sizeof(sha256_t));
+        eventStore.Put(buffer, res1 + res2, 2);
+        break;
     }
     //len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", 1, "{}", "{}", "ESPlus.SuperEvent");
     //eventStore.Put(buffer, len - sizeof(sha256_t));
@@ -229,7 +231,8 @@ int CreateEvent(char *buffer, int len, eventid_t eventId, const char *streamId, 
         + strlen(streamId) + sizeof(int)  //
         + strlen(metadata) + sizeof(int)  //
         + strlen(payload) + sizeof(int)   //
-        + sizeof(sha256_t);
+        //+ sizeof(sha256_t)
+        ;
 
     if (length > len)
     {
@@ -272,7 +275,7 @@ int CreateEvent(char *buffer, int len, eventid_t eventId, const char *streamId, 
     offset += 4;
     memcpy(&addr[offset], payload, strlen(payload));
     offset += strlen(payload);
-    bzero(&addr[offset], sizeof(sha256_t));
+    //bzero(&addr[offset], sizeof(sha256_t));
 
 
     return length;
