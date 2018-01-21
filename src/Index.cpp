@@ -91,13 +91,14 @@ void Index::LoadData()
                 sha256_t check;
                 char *hashAddr = event->Hash();
 
-                sha256_update(&_sha256Context, (const BYTE *) event->Hash(), event->Length - sizeof(sha256_t));
+                printf("r sha256_update, len: %d\n", event->Length - sizeof(sha256_t));
+                sha256_update(&_sha256Context, (const BYTE *)event, event->Length - sizeof(sha256_t));
                 sha256_final(&_sha256Context, (BYTE *)check);
 
                 //printf("Hash: %s\n", Hex(hash, hashAddr, sizeof(sha256_t)));
                 if (memcmp(check, hashAddr, sizeof(sha256_t)))
                 {
-                    printf("Hash: %s vs. %s\n", Hex(hash, hashAddr, sizeof(sha256_t)), Hex(hash2, check, sizeof(sha256_t)));
+                    printf("Hash: %ld, %s vs. %s\n", event->Length, Hex(hash, hashAddr, sizeof(sha256_t)), Hex(hash2, check, sizeof(sha256_t)));
                     assert(!"Invalid hash!");
                 }
 
@@ -255,10 +256,11 @@ bool Index::PersistData(char *memory, int length, int events)
         dest->Length = len;
         dest->Position = _eventCount++;
 
+        printf("w sha256_update, len: %d\n", source->Length);
         sha256_update(&_sha256Context, (const BYTE *)dest, source->Length);
         sha256_final(&_sha256Context, (BYTE *)dest->Hash());
 
-        printf("Hash: %s\n", Hex(hash, dest->Hash(), sizeof(sha256_t)));
+        printf("Wrote: %s, len: %ld\n", Hex(hash, dest->Hash(), sizeof(sha256_t)), len);
 
         IndexEvent(dest);
     }
@@ -271,7 +273,7 @@ void Index::IndexEvent(Event *event)
     auto index = _positionIndex->Insert(event->Hash());
 
     stream->Version += 1;
-    event->Version = stream->Version;
+    //event->Version = stream->Version;/////////////////////////////
     if (stream->Version == 0)
     {
         stream->FirstOfStream = index;
