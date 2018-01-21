@@ -91,8 +91,8 @@ void Index::LoadData()
                 sha256_t check;
                 char *hashAddr = event->Hash();
 
-                // sha256_update(&_sha256Context, (const BYTE *)mem, op - sizeof(sha256_t));
-                // sha256_final(&_sha256Context, (BYTE *)check);
+                sha256_update(&_sha256Context, (const BYTE *) event->Hash(), event->Length - sizeof(sha256_t));
+                sha256_final(&_sha256Context, (BYTE *)check);
 
                 // printf("Hash: %s\n", Hex(hash, hashAddr, sizeof(sha256_t)));
                 // if (memcmp(check, hashAddr, sizeof(sha256_t)))
@@ -245,14 +245,14 @@ bool Index::PersistData(char *memory, int length, int events)
     for (long offset = 0; offset + sizeof(int) < length; offset += ((Event *)&memory[offset])->Length)
     {
         auto source = (Event *)&memory[offset];
-        int len = sizeof(int) + source->Length + sizeof(sha256_t);
+        int len = /*sizeof(int) +*/ source->Length + sizeof(sha256_t);
         auto *dest = (Event *)_dataMemoryPool->Allocate(len);
 
         memcpy(dest, source, source->Length);
         dest->Length = len;
 
-        //sha256_update(&_sha256Context, (const BYTE *)addr, sizeof(int) + length);
-        //sha256_final(&_sha256Context, (BYTE *)addr + sizeof(int) + length);
+        sha256_update(&_sha256Context, (const BYTE *)dest, source->Length);
+        sha256_final(&_sha256Context, (BYTE *)dest->Hash());
 
         IndexEvent(dest);
         ++_eventCount;

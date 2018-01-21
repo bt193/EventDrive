@@ -49,10 +49,10 @@ int main(int argc, char *argv[])
     auto res1 = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", ExpectedVersion::Any, "{0000000000000000000000000000000000000000000000}", "{}", "ESPlus.SuperEvent");
     auto res2 = CreateEvent(buffer + res1, sizeof(buffer) - res1, eventId1, "player/1", ExpectedVersion::Any, "{0000000000000000000000000000000000000000000000}", "{}", "ESPlus.SuperEvent");
 
-    for (int i = 0; i < 1000000; ++i)
+    for (int i = 0; i < 5000; ++i)
     {
         eventStore.Put(buffer, res1 + res2, 2);
-        break;
+        //break;
     }
     //len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", 1, "{}", "{}", "ESPlus.SuperEvent");
     //eventStore.Put(buffer, len - sizeof(sha256_t));
