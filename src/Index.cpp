@@ -50,7 +50,6 @@ void Index::LoadData()
     char filename[512];
     char hash[512];
     char hash2[512];
-    int events = 0;
 
     for (auto i = 1;; ++i)
     {
@@ -95,12 +94,10 @@ void Index::LoadData()
                 //     assert(!"Invalid hash!");
                 // }
 
-                _eventStreamIndex->Insert(event->StreamId());
-                _positionIndex->Insert(hashAddr);
-
+                IndexEvent(event);
                 //printf("Skip: %d\n", op);
                 segment->Skip(op);
-                ++events;
+                ++_eventCount;
             }
             else if (op == OpCode::None)
             {
@@ -116,7 +113,7 @@ void Index::LoadData()
         _chunks.push_back(segment);
         _currentSegment = segment;
     }
-    printf("Total events: %d\n", events);
+    printf("Total events: %d\n", _eventCount);
 }
 
 void Index::Put(char *memory, int length)
@@ -192,11 +189,29 @@ void Index::InjectData(char *memory, int length)
     //printf("Inject %p origin version: %d, version: %d\n", addr, origin->Version, event->Version);
     //sha256_update(&_sha256Context, (const BYTE *)addr, sizeof(int) + length);
     //sha256_final(&_sha256Context, (BYTE *)addr + sizeof(int) + length);
+    IndexEvent(event);
 
+    ++_eventCount;
+}
+
+void Index::IndexEvent(Event *event)
+{
     auto stream = _eventStreamIndex->Insert(event->StreamId());
-    auto index = _positionIndex->Insert(addr + sizeof(int) + length);
+    auto index = _positionIndex->Insert(event->Hash());
 
     stream->Version += 1;
+    event->Version = stream->Version;
+    if (stream->Version == 0)
+    {
+        stream->FirstOfStream = index;
+        stream->LastOfStream = index;
+    }
+    else
+    {
+        index->PreviousInStream = stream->LastOfStream;
+        stream->LastOfStream->NextInStream = index;
+        stream->LastOfStream = index;        
+    }
 }
 
 void Index::BeginTransaction()

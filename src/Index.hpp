@@ -65,6 +65,7 @@ private:
   void CommitTransaction();
   void InjectData(char *memory, int length);
   void LoadData();
+  void IndexEvent(Event *event);
   std::vector<MemorySegment *> _chunks;
   MemorySegment *_currentSegment = nullptr;
 
@@ -72,6 +73,7 @@ private:
   PositionIndex *_positionIndex;
   EventStreamIndex *_eventStreamIndex;
   SHA256_CTX _sha256Context;
+  long _eventCount = 0;
 };
 
 #endif
