@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     for (int i = 0; i < 5000; ++i)
     {
         eventStore.Put(buffer, res1 + res2, 2);
-        //break;
+        break;
     }
     //len = CreateEvent(buffer, sizeof(buffer), eventId1, "player/1", 1, "{}", "{}", "ESPlus.SuperEvent");
     //eventStore.Put(buffer, len - sizeof(sha256_t));
