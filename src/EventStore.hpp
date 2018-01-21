@@ -8,12 +8,6 @@ class PositionIndex;
 class EventStreamIndex;
 class Allocator;
 
-struct Name
-{
-  int Length;
-  char Name[];
-};
-
 class EventStore
 {
 public:
@@ -23,11 +17,10 @@ public:
 
   void Put(char *memory, int length);
 
-  
   int ReadForward(position_t fromPosition, char *buffer, int length, int maxEvents);
   int ReadBackwards(position_t fromPosition, char *buffer, int length, int maxEvents);
-  int ReadStreamForward(Name *name, char *buffer, int length, int minVersion, int maxVersion);
-  int ReadStreamBackwards(Name *name, char *buffer, int length, int minVersion, int maxVersion);
+  int ReadStreamForward(FixedString *name, char *buffer, int length, int minVersion, int maxVersion);
+  int ReadStreamBackwards(FixedString *name, char *buffer, int length, int minVersion, int maxVersion);
 
 private:
   EventStore(EventStore &&) = default;

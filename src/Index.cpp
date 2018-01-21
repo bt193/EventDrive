@@ -113,11 +113,32 @@ void Index::LoadData()
         _chunks.push_back(segment);
         _currentSegment = segment;
     }
-    printf("Total events: %d\n", _eventCount);
+    printf("Total events: %ld\n", _eventCount);
 }
 
-void Index::Put(char *memory, int length)
+void Index::Put(char *memory, int length, int events)
 {
+    bool withTransaction = events > 1;
+    int token = 0xdeadbeef;
+
+    if (withTransaction)
+    {
+        BeginTransaction();
+    }
+
+
+    if (withTransaction)
+    {
+        CommitTransaction();
+    }    
+
+    // * Check consistency
+    // * Check version
+    // * Acquire write lock
+    // * Check version (first only)
+    // * Write all
+    // * Relase write lock
+
     Event *event = (Event *)memory;
     char *ptr = event->StreamId();
     auto stream = _eventStreamIndex->Lookup(ptr);
@@ -170,9 +191,9 @@ void Index::Put(char *memory, int length)
 
     //printf("-- Ok version: %d\n", event->Version);
 
-    BeginTransaction();
+    //
     InjectData(memory, length);
-    CommitTransaction();
+    //CommitTransaction();
 }
 
 void Index::InjectData(char *memory, int length)
@@ -210,7 +231,7 @@ void Index::IndexEvent(Event *event)
     {
         index->PreviousInStream = stream->LastOfStream;
         stream->LastOfStream->NextInStream = index;
-        stream->LastOfStream = index;        
+        stream->LastOfStream = index;
     }
 }
 

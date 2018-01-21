@@ -21,7 +21,7 @@ bool EventCollisionIndex::Exists(eventid_t id)
 
 bool EventCollisionIndex::Exists(EventIdCollisionIndexNode *node, eventid_t id)
 {
-    while (node && node->EventId)
+    while (node)
     {
         int result = memcmp(id, node->EventId, sizeof(eventid_t));
 

@@ -10,7 +10,7 @@ class Event;
 void TestEventStreamIndex();
 void TestEventCollisionIndex();
 void TestPositionIndex();
-int CreateEvent(char *buffer, int len, eventid_t eventId, char *streamId, int version, char *metadata, char *payload, char *eventType);
+int CreateEvent(char *buffer, int len, eventid_t eventId, const char *streamId, int version, const char *metadata, const char *payload, const char *eventType);
 
 #include <stdlib.h>
 #include "Index.hpp"
@@ -124,7 +124,7 @@ void TestEventCollisionIndex()
 
 #include "Indexes/EventStreamIndex.hpp"
 
-void WriteToBuffer(char *buffer, char *text)
+void WriteToBuffer(char *buffer, const char *text)
 {
     int length = strlen(text);
 
@@ -215,7 +215,7 @@ void TestPositionIndex()
     printf("TestPositionIndex... Done!\n");
 }
 
-int CreateEvent(char *buffer, int len, eventid_t eventId, char *streamId, int version, char *metadata, char *payload, char *eventType)
+int CreateEvent(char *buffer, int len, eventid_t eventId, const char *streamId, int version, const char *metadata, const char *payload, const char *eventType)
 {
     int length =
         0                                 //

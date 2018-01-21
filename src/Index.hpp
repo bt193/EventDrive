@@ -52,7 +52,7 @@ public:
   Index(MemoryPool *dataMemoryPool, PositionIndex *positionIndex, EventStreamIndex *eventStreamIndex);
   ~Index();
   void Scan();
-  void Put(char *memory, int length);
+  void Put(char *memory, int length, int events = 1);
 
 private:
   Index() = default;

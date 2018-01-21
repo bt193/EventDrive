@@ -35,7 +35,7 @@ EventStreamIndexNode *PositionIndex::Lookup(position_t key)
 
 EventStreamIndexNode *PositionIndex::Lookup(EventStreamIndexNode *node, position_t id)
 {
-    while (node && node->Hash)
+    while (node)
     {
         int result = memcmp(id, (char *)node->Hash, sizeof(position_t));
 

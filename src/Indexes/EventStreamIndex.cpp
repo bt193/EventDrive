@@ -32,7 +32,7 @@ int EventStreamIndex::CompareNames(char *ptr1, char *ptr2)
 
 Stream *EventStreamIndex::Lookup(Stream *node, void *id)
 {
-    while (node && node->Name)
+    while (node)
     {
         int result = CompareNames((char *)id, node->Name);
 
