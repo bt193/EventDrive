@@ -15,6 +15,7 @@ struct Event
 {
   int Length;
   int Version;
+  long Position;
   eventid_t EventId;
   int StreamIdOffset;
   int MetadataOffset;
@@ -75,7 +76,6 @@ private:
   void PutTransaction(OpCode instruction, int token);
   std::vector<MemorySegment *> _chunks;
   MemorySegment *_currentSegment = nullptr;
-
   MemoryPool *_dataMemoryPool;
   PositionIndex *_positionIndex;
   EventStreamIndex *_eventStreamIndex;

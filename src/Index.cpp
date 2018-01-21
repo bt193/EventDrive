@@ -78,12 +78,12 @@ void Index::LoadData()
             if (op == OpCode::BeginTransaction)
             {
                 //printf("BeginTransaction\n");
-                segment->Skip(sizeof(int)*2);
+                segment->Skip(sizeof(int) * 2);
             }
             else if (op == OpCode::Commit)
             {
                 //printf("Commit\n");
-                segment->Skip(sizeof(int)*2);
+                segment->Skip(sizeof(int) * 2);
             }
             else if (op > 0)
             {
@@ -194,7 +194,7 @@ int Index::CompareFixedString(FixedString *str1, FixedString *str2)
 void Index::Put(char *memory, int length, int events)
 {
     bool withTransaction = events > 1;
-    int token = *(int *) _sha256Context.state;
+    int token = *(int *)_sha256Context.state;
 
     if (!IsPure(memory, length, events))
     {
@@ -217,11 +217,6 @@ void Index::Put(char *memory, int length, int events)
         return;
     }
 
-    if (withTransaction)
-    {
-        BeginTransaction(token);
-    }
-
     {
         Guard guard(_writeLock);
 
@@ -231,12 +226,18 @@ void Index::Put(char *memory, int length, int events)
             _exit(-1);
             return;
         }
-        PersistData(memory, length, events);
-    }
 
-    if (withTransaction)
-    {
-        CommitTransaction(token);
+        if (withTransaction)
+        {
+            BeginTransaction(token);
+        }
+
+        PersistData(memory, length, events);
+
+        if (withTransaction)
+        {
+            CommitTransaction(token);
+        }
     }
 }
 
@@ -255,7 +256,7 @@ bool Index::PersistData(char *memory, int length, int events)
         // sha256_final(&_sha256Context, (BYTE *)dest->Hash());
 
         IndexEvent(dest);
-        ++_eventCount;
+        dest->Position = _eventCount++;
     }
     return true;
 }
@@ -270,14 +271,13 @@ void Index::IndexEvent(Event *event)
     if (stream->Version == 0)
     {
         stream->FirstOfStream = index;
-        stream->LastOfStream = index;
     }
     else
     {
         index->PreviousInStream = stream->LastOfStream;
         stream->LastOfStream->NextInStream = index;
-        stream->LastOfStream = index;
     }
+    stream->LastOfStream = index;
 }
 
 struct Transaction
