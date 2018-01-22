@@ -256,21 +256,21 @@ bool Index::PersistData(char *memory, int length, int events)
         dest->Length = len;
         dest->Position = _eventCount++;
 
+        auto stream = _eventStreamIndex->Insert(dest->StreamId());
+        dest->Version = stream->Version;
+
         sha256_update(&_sha256Context, (const BYTE *)dest, source->Length);
         sha256_final(&_sha256Context, (BYTE *)dest->Hash());
-
-        IndexEvent(dest);
+        IndexEvent(dest, stream);
     }
     return true;
 }
 
-void Index::IndexEvent(Event *event)
+void Index::IndexEvent(Event *event, Stream *stream)
 {
-    auto stream = _eventStreamIndex->Insert(event->StreamId());
     auto index = _positionIndex->Insert(event->Hash());
 
     stream->Version += 1;
-    //event->Version = stream->Version;/////////////////////////////
     if (stream->Version == 0)
     {
         stream->FirstOfStream = index;
@@ -281,6 +281,13 @@ void Index::IndexEvent(Event *event)
         stream->LastOfStream->NextInStream = index;
     }
     stream->LastOfStream = index;
+}
+
+void Index::IndexEvent(Event *event)
+{
+    auto stream = _eventStreamIndex->Insert(event->StreamId());
+
+    IndexEvent(event, stream);
 }
 
 struct Transaction

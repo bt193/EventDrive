@@ -68,6 +68,7 @@ private:
   void CommitTransaction(int token);
   void LoadData();
   void IndexEvent(Event *event);
+  void IndexEvent(Event *event, Stream *stream);
   bool IsPure(char *memory, int length, int events);
   bool BelongToSameStreamId(char *memory, int length, int events);
   bool AcceptVersion(Event *event);
