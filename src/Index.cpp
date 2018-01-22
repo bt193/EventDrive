@@ -91,14 +91,14 @@ void Index::LoadData()
                 sha256_t check;
                 char *hashAddr = event->Hash();
 
-                printf("r sha256_update, len: %d\n", event->Length - sizeof(sha256_t));
+                //printf("r sha256_update, len: %d\n", event->Length - sizeof(sha256_t));
                 sha256_update(&_sha256Context, (const BYTE *)event, event->Length - sizeof(sha256_t));
                 sha256_final(&_sha256Context, (BYTE *)check);
 
                 //printf("Hash: %s\n", Hex(hash, hashAddr, sizeof(sha256_t)));
                 if (memcmp(check, hashAddr, sizeof(sha256_t)))
                 {
-                    printf("Hash: %ld, %s vs. %s\n", event->Length, Hex(hash, hashAddr, sizeof(sha256_t)), Hex(hash2, check, sizeof(sha256_t)));
+                    //printf("Hash: %ld, %s vs. %s\n", event->Length, Hex(hash, hashAddr, sizeof(sha256_t)), Hex(hash2, check, sizeof(sha256_t)));
                     assert(!"Invalid hash!");
                 }
 
@@ -228,17 +228,17 @@ void Index::Put(char *memory, int length, int events)
             return;
         }
 
-        // if (withTransaction)
-        // {
-        //     BeginTransaction(token);
-        // }
+        if (withTransaction)
+        {
+            BeginTransaction(token);
+        }
 
         PersistData(memory, length, events);
 
-        // if (withTransaction)
-        // {
-        //     CommitTransaction(token);
-        // }
+        if (withTransaction)
+        {
+            CommitTransaction(token);
+        }
     }
 }
 
@@ -256,11 +256,8 @@ bool Index::PersistData(char *memory, int length, int events)
         dest->Length = len;
         dest->Position = _eventCount++;
 
-        printf("w sha256_update, len: %d\n", source->Length);
         sha256_update(&_sha256Context, (const BYTE *)dest, source->Length);
         sha256_final(&_sha256Context, (BYTE *)dest->Hash());
-
-        printf("Wrote: %s, len: %ld\n", Hex(hash, dest->Hash(), sizeof(sha256_t)), len);
 
         IndexEvent(dest);
     }

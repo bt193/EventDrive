@@ -220,14 +220,6 @@ void TestPositionIndex()
 int CreateEvent(char *buffer, int len, eventid_t eventId, const char *streamId, int version, const char *metadata, const char *payload, const char *eventType)
 {
     int length =
-        // 0                                 //
-        // + sizeof(int)                     // Length
-        // + sizeof(version)                 // Version
-        // + sizeof(long)                 // Position
-        // + sizeof(eventid_t)               // EventId
-        // + sizeof(int)                     //StreamIdOffset
-        // + sizeof(int)                     //MetadataOffset
-        // + sizeof(int)                     //PayloadOffset
         sizeof(Event)
         + strlen(eventType) + sizeof(int) //
         + strlen(streamId) + sizeof(int)  //
