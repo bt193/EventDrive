@@ -58,7 +58,7 @@ void Index::LoadData()
     char hash[512];
     char hash2[512];
 
-    for (auto i = 1;; ++i)
+    for (auto i = 0;; ++i)
     {
         snprintf(filename, sizeof(filename), "Index/Default/Chunk#%08x.data", i);
 

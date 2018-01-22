@@ -49,8 +49,7 @@ MemorySegment *MemoryPool::CurrentSegment()
 MemorySegment *MemoryPool::NextSegment()
 {
     char buffer[4096];
-    ++_segments;
 
-    snprintf(buffer, sizeof(buffer), "Index/Default/Chunk#%08x.data", _segments);
+    snprintf(buffer, sizeof(buffer), "Index/Default/Chunk#%08x.data", _segments++);
     return _currentSegment = _allocator->Allocate(buffer);
 }
